@@ -9,6 +9,7 @@ import {
   JoinClubParams,
   JoinClubResponse,
 } from "@workspace/api-zod";
+import { getAuthUserId } from "../lib/auth-cookie";
 
 const router: IRouter = Router();
 
@@ -79,8 +80,7 @@ router.get("/clubs", async (req, res): Promise<void> => {
   }
 
   const { categoryId, search, myClubs } = parsed.data;
-  const session = (req as any).session;
-  const userId = session.userId ?? null;
+  const userId = getAuthUserId(req);
 
   const conditions = [];
   if (categoryId) conditions.push(eq(clubsTable.categoryId, categoryId));
@@ -103,8 +103,7 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const session = (req as any).session;
-  const userId = session.userId ?? null;
+  const userId = getAuthUserId(req);
 
   const clubs = await buildClubList(userId, [eq(clubsTable.id, id)]);
   if (!clubs.length) {
@@ -216,8 +215,8 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/clubs/:id/join", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
@@ -228,12 +227,12 @@ router.post("/clubs/:id/join", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(clubMembershipsTable)
-    .where(and(eq(clubMembershipsTable.userId, session.userId), eq(clubMembershipsTable.clubId, id)));
+    .where(and(eq(clubMembershipsTable.userId, userId), eq(clubMembershipsTable.clubId, id)));
 
   if (existing) {
     await db
       .delete(clubMembershipsTable)
-      .where(and(eq(clubMembershipsTable.userId, session.userId), eq(clubMembershipsTable.clubId, id)));
+      .where(and(eq(clubMembershipsTable.userId, userId), eq(clubMembershipsTable.clubId, id)));
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })
@@ -242,7 +241,7 @@ router.post("/clubs/:id/join", async (req, res): Promise<void> => {
 
     res.json(JoinClubResponse.parse({ joined: false, memberCount: count }));
   } else {
-    await db.insert(clubMembershipsTable).values({ userId: session.userId, clubId: id });
+    await db.insert(clubMembershipsTable).values({ userId, clubId: id });
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })

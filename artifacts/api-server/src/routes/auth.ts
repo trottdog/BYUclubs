@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
+import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie";
 
 const router: IRouter = Router();
 
@@ -29,8 +30,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const passwordHash = await bcrypt.hash(password, 12);
   const [user] = await db.insert(usersTable).values({ email, passwordHash, firstName, lastName }).returning();
 
-  const session = (req as any).session;
-  session.userId = user.id;
+  setAuthSession(res, user.id);
 
   res.status(201).json({
     user: {
@@ -64,8 +64,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const session = (req as any).session;
-  session.userId = user.id;
+  setAuthSession(res, user.id);
 
   res.json({
     user: {
@@ -79,23 +78,18 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/logout", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  session.destroy((err: any) => {
-    if (err) {
-      req.log.error({ err }, "Error destroying session");
-    }
-    res.json({ message: "Logged out successfully." });
-  });
+  clearAuthSession(res);
+  res.json({ message: "Logged out successfully." });
 });
 
 router.get("/auth/me", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId));
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
     res.status(401).json({ error: "User not found." });
     return;

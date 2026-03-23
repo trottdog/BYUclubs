@@ -1,11 +1,14 @@
 import express, { type Express } from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import pinoHttp from "pino-http";
-import session from "express-session";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { getCookieSecret } from "./lib/auth-cookie";
 
 const app: Express = express();
+
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
@@ -27,21 +30,9 @@ app.use(
   }),
 );
 app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser(getCookieSecret()));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET ?? "byu-connect-secret-dev-only",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    },
-  }),
-);
 
 app.use("/api", router);
 

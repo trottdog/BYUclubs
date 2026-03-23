@@ -12,6 +12,7 @@ import {
   ReserveEventParams,
   ReserveEventResponse,
 } from "@workspace/api-zod";
+import { getAuthUserId } from "../lib/auth-cookie";
 
 const router: IRouter = Router();
 
@@ -109,8 +110,7 @@ router.get("/events", async (req, res): Promise<void> => {
   }
 
   const { categoryId, buildingId, clubId, search } = parsed.data;
-  const session = (req as any).session;
-  const userId = session.userId ?? null;
+  const userId = getAuthUserId(req);
 
   const conditions = [];
   if (categoryId) conditions.push(eq(eventsTable.categoryId, categoryId));
@@ -130,8 +130,8 @@ router.get("/events", async (req, res): Promise<void> => {
 });
 
 router.post("/events", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
@@ -161,7 +161,7 @@ router.post("/events", async (req, res): Promise<void> => {
     })
     .returning();
 
-  const events = await buildEventList(session.userId, [eq(eventsTable.id, event.id)]);
+  const events = await buildEventList(userId, [eq(eventsTable.id, event.id)]);
   res.status(201).json(events[0]);
 });
 
@@ -173,8 +173,7 @@ router.get("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const session = (req as any).session;
-  const userId = session.userId ?? null;
+  const userId = getAuthUserId(req);
 
   const events = await buildEventList(userId, [eq(eventsTable.id, id)]);
   if (!events.length) {
@@ -199,8 +198,8 @@ router.get("/events/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/events/:id/save", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
@@ -211,22 +210,22 @@ router.post("/events/:id/save", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(eventSavesTable)
-    .where(and(eq(eventSavesTable.userId, session.userId), eq(eventSavesTable.eventId, id)));
+    .where(and(eq(eventSavesTable.userId, userId), eq(eventSavesTable.eventId, id)));
 
   if (existing) {
     await db
       .delete(eventSavesTable)
-      .where(and(eq(eventSavesTable.userId, session.userId), eq(eventSavesTable.eventId, id)));
+      .where(and(eq(eventSavesTable.userId, userId), eq(eventSavesTable.eventId, id)));
     res.json(SaveEventResponse.parse({ saved: false }));
   } else {
-    await db.insert(eventSavesTable).values({ userId: session.userId, eventId: id });
+    await db.insert(eventSavesTable).values({ userId, eventId: id });
     res.json(SaveEventResponse.parse({ saved: true }));
   }
 });
 
 router.post("/events/:id/reserve", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
@@ -243,12 +242,12 @@ router.post("/events/:id/reserve", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(reservationsTable)
-    .where(and(eq(reservationsTable.userId, session.userId), eq(reservationsTable.eventId, id)));
+    .where(and(eq(reservationsTable.userId, userId), eq(reservationsTable.eventId, id)));
 
   if (existing) {
     await db
       .delete(reservationsTable)
-      .where(and(eq(reservationsTable.userId, session.userId), eq(reservationsTable.eventId, id)));
+      .where(and(eq(reservationsTable.userId, userId), eq(reservationsTable.eventId, id)));
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })
@@ -267,7 +266,7 @@ router.post("/events/:id/reserve", async (req, res): Promise<void> => {
       return;
     }
 
-    await db.insert(reservationsTable).values({ userId: session.userId, eventId: id });
+    await db.insert(reservationsTable).values({ userId, eventId: id });
 
     const [{ newCount }] = await db
       .select({ newCount: sql<number>`count(*)::int` })

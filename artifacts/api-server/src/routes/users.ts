@@ -2,17 +2,16 @@ import { Router, type IRouter } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import { db, usersTable, eventSavesTable, reservationsTable, eventsTable, buildingsTable, categoriesTable, clubsTable } from "@workspace/db";
 import { GetUserProfileResponse } from "@workspace/api-zod";
+import { getAuthUserId } from "../lib/auth-cookie";
 
 const router: IRouter = Router();
 
 router.get("/users/profile", async (req, res): Promise<void> => {
-  const session = (req as any).session;
-  if (!session.userId) {
+  const userId = getAuthUserId(req);
+  if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
-
-  const userId = session.userId;
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {

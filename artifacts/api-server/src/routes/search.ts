@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { db, eventsTable, buildingsTable, categoriesTable, clubsTable, clubMembershipsTable, eventSavesTable, reservationsTable } from "@workspace/db";
 import { SearchQueryParams, SearchResponse } from "@workspace/api-zod";
+import { getAuthUserId } from "../lib/auth-cookie";
 
 const router: IRouter = Router();
 
@@ -13,8 +14,7 @@ router.get("/search", async (req, res): Promise<void> => {
   }
 
   const { q } = parsed.data;
-  const session = (req as any).session;
-  const userId = session.userId ?? null;
+  const userId = getAuthUserId(req);
 
   const [eventsRaw, clubsRaw] = await Promise.all([
     db
