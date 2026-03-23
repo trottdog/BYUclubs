@@ -12,7 +12,7 @@ import {
   ReserveEventParams,
   ReserveEventResponse,
 } from "@workspace/api-zod";
-import { getAuthUserId } from "../lib/auth-cookie";
+import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router: IRouter = Router();
 

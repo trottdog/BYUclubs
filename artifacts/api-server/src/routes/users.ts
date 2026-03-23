@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import { db, usersTable, eventSavesTable, reservationsTable, eventsTable, buildingsTable, categoriesTable, clubsTable } from "@workspace/db";
 import { GetUserProfileResponse } from "@workspace/api-zod";
-import { getAuthUserId } from "../lib/auth-cookie";
+import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router: IRouter = Router();
 

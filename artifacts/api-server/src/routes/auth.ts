@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
-import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie";
+import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie.js";
 
 const router: IRouter = Router();
 
