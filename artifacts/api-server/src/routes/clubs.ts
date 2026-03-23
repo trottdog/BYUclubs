@@ -224,6 +224,16 @@ router.post("/clubs/:id/join", async (req, res): Promise<void> => {
 
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid club ID." });
+    return;
+  }
+
+  const [club] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id));
+  if (!club) {
+    res.status(404).json({ error: "Club not found." });
+    return;
+  }
 
   const [existing] = await db
     .select()

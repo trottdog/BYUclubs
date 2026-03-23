@@ -145,6 +145,27 @@ router.post("/events", async (req, res): Promise<void> => {
 
   const { title, description, startTime, endTime, buildingId, roomNumber, categoryId, clubId, capacity, hasFood, tags } = parsed.data;
 
+  const [[building], [category], [club]] = await Promise.all([
+    db.select({ id: buildingsTable.id }).from(buildingsTable).where(eq(buildingsTable.id, buildingId)).limit(1),
+    db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.id, categoryId)).limit(1),
+    db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, clubId)).limit(1),
+  ]);
+
+  if (!building) {
+    res.status(400).json({ error: "Invalid buildingId." });
+    return;
+  }
+
+  if (!category) {
+    res.status(400).json({ error: "Invalid categoryId." });
+    return;
+  }
+
+  if (!club) {
+    res.status(400).json({ error: "Invalid clubId." });
+    return;
+  }
+
   const [event] = await db
     .insert(eventsTable)
     .values({
@@ -207,6 +228,16 @@ router.post("/events/:id/save", async (req, res): Promise<void> => {
 
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
+
+  const [event] = await db.select({ id: eventsTable.id }).from(eventsTable).where(eq(eventsTable.id, id));
+  if (!event) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
 
   const [existing] = await db
     .select()
@@ -233,6 +264,10 @@ router.post("/events/:id/reserve", async (req, res): Promise<void> => {
 
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
 
   const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, id));
   if (!event) {

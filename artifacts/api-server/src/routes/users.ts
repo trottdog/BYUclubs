@@ -20,7 +20,10 @@ router.get("/users/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  async function getEvents(eventIds: number[]) {
+  async function getEvents(
+    eventIds: number[],
+    state: { isSaved: boolean; isReserved: boolean },
+  ) {
     if (eventIds.length === 0) return [];
     const events = await db
       .select({
@@ -65,8 +68,8 @@ router.get("/users/profile", async (req, res): Promise<void> => {
       startTime: e.startTime.toISOString(),
       endTime: e.endTime.toISOString(),
       reservedCount: reservedCountMap.get(e.id) ?? 0,
-      isSaved: true,
-      isReserved: true,
+      isSaved: state.isSaved,
+      isReserved: state.isReserved,
       coverImageUrl: e.coverImageUrl ?? null,
       tags: e.tags ?? [],
     }));
@@ -88,8 +91,8 @@ router.get("/users/profile", async (req, res): Promise<void> => {
   const reservedEventIds = reservationRows.map((r) => r.eventId);
 
   const [savedEvents, reservationEvents] = await Promise.all([
-    getEvents(savedEventIds),
-    getEvents(reservedEventIds),
+    getEvents(savedEventIds, { isSaved: true, isReserved: false }),
+    getEvents(reservedEventIds, { isSaved: false, isReserved: true }),
   ]);
 
   const profile = {
