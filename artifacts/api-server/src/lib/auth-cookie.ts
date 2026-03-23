@@ -1,4 +1,4 @@
-import type { Request, Response, CookieOptions } from "express";
+import type { Request, CookieOptions } from "express";
 
 const AUTH_COOKIE_NAME = "byu-connect-session";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -30,11 +30,11 @@ export function getAuthUserId(req: Request): number | null {
   return userId;
 }
 
-export function setAuthSession(res: Response, userId: number): void {
+export function setAuthSession(res: any, userId: number): void {
   res.cookie(AUTH_COOKIE_NAME, String(userId), getCookieOptions());
 }
 
-export function clearAuthSession(res: Response): void {
+export function clearAuthSession(res: any): void {
   res.clearCookie(AUTH_COOKIE_NAME, {
     path: "/",
     httpOnly: true,
