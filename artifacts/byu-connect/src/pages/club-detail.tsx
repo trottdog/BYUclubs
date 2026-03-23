@@ -7,16 +7,23 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EventCard } from "@/components/event-card";
 import { format } from "date-fns";
 
-export default function ClubDetailPage() {
+export default function ClubDetailPage({
+  routeParams,
+}: {
+  routeParams?: { id?: string };
+}) {
   const { id } = useParams<{ id: string }>();
   const [location, setLocation] = useLocation();
+  const clubIdFromRouteProps = Number(routeParams?.id);
   const clubIdFromParams = Number(id);
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : location;
   const clubIdFromPathMatch = pathname.match(/\/clubs\/(\d+)(?:\/)?$/);
-  const clubId = Number.isNaN(clubIdFromParams)
-    ? Number(clubIdFromPathMatch?.[1])
-    : clubIdFromParams;
+  const clubId = !Number.isNaN(clubIdFromRouteProps)
+    ? clubIdFromRouteProps
+    : !Number.isNaN(clubIdFromParams)
+      ? clubIdFromParams
+      : Number(clubIdFromPathMatch?.[1]);
   const [activeTab, setActiveTab] = useState<"about" | "activity" | "contact">("about");
   const queryClient = useQueryClient();
 

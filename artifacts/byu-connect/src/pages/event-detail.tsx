@@ -6,16 +6,23 @@ import { ArrowLeft, Calendar, MapPin, Tag, Users, Bookmark, CheckCircle, Clock }
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function EventDetailPage() {
+export default function EventDetailPage({
+  routeParams,
+}: {
+  routeParams?: { id?: string };
+}) {
   const { id } = useParams<{ id: string }>();
   const [location, setLocation] = useLocation();
+  const eventIdFromRouteProps = Number(routeParams?.id);
   const eventIdFromParams = Number(id);
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : location;
   const eventIdFromPathMatch = pathname.match(/\/events\/(\d+)(?:\/)?$/);
-  const eventId = Number.isNaN(eventIdFromParams)
-    ? Number(eventIdFromPathMatch?.[1])
-    : eventIdFromParams;
+  const eventId = !Number.isNaN(eventIdFromRouteProps)
+    ? eventIdFromRouteProps
+    : !Number.isNaN(eventIdFromParams)
+      ? eventIdFromParams
+      : Number(eventIdFromPathMatch?.[1]);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 

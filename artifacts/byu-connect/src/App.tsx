@@ -25,9 +25,13 @@ function Router() {
           <Switch>
             <Route path="/" component={Discover} />
             <Route path="/events/new" component={CreateEvent} />
-            <Route path="/events/:id" component={EventDetail} />
+            <Route path="/events/:id">
+              {(params) => <EventDetail routeParams={params} />}
+            </Route>
             <Route path="/clubs" component={MyClubs} />
-            <Route path="/clubs/:id" component={ClubDetail} />
+            <Route path="/clubs/:id">
+              {(params) => <ClubDetail routeParams={params} />}
+            </Route>
             <Route path="/search" component={Search} />
             <Route path="/profile" component={Profile} />
             <Route component={NotFound} />
