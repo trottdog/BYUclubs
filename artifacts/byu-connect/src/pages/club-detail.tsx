@@ -9,8 +9,14 @@ import { format } from "date-fns";
 
 export default function ClubDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const clubId = Number(id);
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const clubIdFromParams = Number(id);
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : location;
+  const clubIdFromPathMatch = pathname.match(/\/clubs\/(\d+)(?:\/)?$/);
+  const clubId = Number.isNaN(clubIdFromParams)
+    ? Number(clubIdFromPathMatch?.[1])
+    : clubIdFromParams;
   const [activeTab, setActiveTab] = useState<"about" | "activity" | "contact">("about");
   const queryClient = useQueryClient();
 

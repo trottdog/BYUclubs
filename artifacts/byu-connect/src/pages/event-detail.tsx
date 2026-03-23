@@ -8,8 +8,14 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const eventId = Number(id);
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const eventIdFromParams = Number(id);
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : location;
+  const eventIdFromPathMatch = pathname.match(/\/events\/(\d+)(?:\/)?$/);
+  const eventId = Number.isNaN(eventIdFromParams)
+    ? Number(eventIdFromPathMatch?.[1])
+    : eventIdFromParams;
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
