@@ -1,10 +1,18 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import pinoHttp from "pino-http";
+import pinoHttpImport from "pino-http";
 import router from "./routes/index.js";
 import { logger } from "./lib/logger.js";
 import { getCookieSecret } from "./lib/auth-cookie.js";
+
+const pinoHttp = pinoHttpImport as unknown as (options: {
+  logger: typeof logger;
+  serializers: {
+    req(req: any): { id: unknown; method: unknown; url: string | undefined };
+    res(res: any): { statusCode: unknown };
+  };
+}) => ReturnType<typeof express.json>;
 
 const app = express();
 
@@ -14,7 +22,7 @@ app.use(
   pinoHttp({
     logger,
     serializers: {
-      req(req) {
+      req(req: any) {
         return {
           id: req.id,
           method: req.method,
