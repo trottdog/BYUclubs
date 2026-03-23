@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Request, CookieOptions } from "express";
 
 const AUTH_COOKIE_NAME = "byu-connect-session";

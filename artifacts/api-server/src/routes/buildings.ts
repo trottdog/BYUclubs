@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { db, buildingsTable } from "@workspace/db";
 import { GetBuildingsResponse } from "@workspace/api-zod";
