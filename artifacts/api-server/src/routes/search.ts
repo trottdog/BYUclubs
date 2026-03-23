@@ -1,10 +1,10 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { db, eventsTable, buildingsTable, categoriesTable, clubsTable, clubMembershipsTable, eventSavesTable, reservationsTable } from "@workspace/db";
 import { SearchQueryParams, SearchResponse } from "@workspace/api-zod";
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/search", async (req, res): Promise<void> => {
   const parsed = SearchQueryParams.safeParse(req.query);

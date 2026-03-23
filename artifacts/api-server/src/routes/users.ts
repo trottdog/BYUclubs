@@ -1,10 +1,10 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import { db, usersTable, eventSavesTable, reservationsTable, eventsTable, buildingsTable, categoriesTable, clubsTable } from "@workspace/db";
 import { GetUserProfileResponse } from "@workspace/api-zod";
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/users/profile", async (req, res): Promise<void> => {
   const userId = getAuthUserId(req);

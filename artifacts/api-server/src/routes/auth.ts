@@ -1,11 +1,11 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
 import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie.js";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);

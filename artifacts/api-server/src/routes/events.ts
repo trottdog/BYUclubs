@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { db, eventsTable, buildingsTable, categoriesTable, clubsTable, eventSavesTable, reservationsTable } from "@workspace/db";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@workspace/api-zod";
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
-const router: IRouter = Router();
+const router = Router();
 
 async function buildEventList(userId: number | null, conditions: any[] = []) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, buildingsTable } from "@workspace/db";
 import { GetBuildingsResponse } from "@workspace/api-zod";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/buildings", async (_req, res): Promise<void> => {
   const buildings = await db.select().from(buildingsTable).orderBy(buildingsTable.name);
