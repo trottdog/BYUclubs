@@ -3,14 +3,24 @@ import pg from "pg";
 import * as schema from "./schema/index.js";
 
 const { Pool } = pg;
+const databaseUrl = process.env.DATABASE_URL;
 
-if (!process.env.DATABASE_URL) {
+if (!databaseUrl) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const useSsl =
+  process.env.PGSSLMODE === "require" ||
+  databaseUrl.includes("sslmode=require") ||
+  databaseUrl.includes("supabase.co");
+
+export const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+});
+
 export const db = drizzle(pool, { schema });
 
 export * from "./schema/index.js";
