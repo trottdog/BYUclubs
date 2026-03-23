@@ -5,7 +5,7 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Event } from "./event";
+import type { Event } from "./event.js";
 
 export type EventDetail = Event & {
   clubAvatar?: string;

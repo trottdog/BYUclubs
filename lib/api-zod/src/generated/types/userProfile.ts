@@ -5,8 +5,8 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Event } from "./event";
-import type { User } from "./user";
+import type { Event } from "./event.js";
+import type { User } from "./user.js";
 
 export interface UserProfile {
   user: User;
