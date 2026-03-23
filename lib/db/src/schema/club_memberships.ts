@@ -1,6 +1,6 @@
 import { pgTable, integer, timestamp, primaryKey } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
-import { clubsTable } from "./clubs";
+import { usersTable } from "./users.js";
+import { clubsTable } from "./clubs.js";
 
 export const clubMembershipsTable = pgTable("club_memberships", {
   userId: integer("user_id").notNull().references(() => usersTable.id),

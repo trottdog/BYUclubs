@@ -1,7 +1,7 @@
 import { pgTable, text, serial, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { categoriesTable } from "./categories";
+import { categoriesTable } from "./categories.js";
 
 export const clubsTable = pgTable("clubs", {
   id: serial("id").primaryKey(),
