@@ -20,22 +20,48 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={Auth} />
+      <Route path="/">
+        <Layout>
+          <Discover />
+        </Layout>
+      </Route>
+      <Route path="/events/new">
+        <Layout>
+          <CreateEvent />
+        </Layout>
+      </Route>
+      <Route path="/events/:id">
+        {(params) => (
+          <Layout>
+            <EventDetail routeParams={params} />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/clubs">
+        <Layout>
+          <MyClubs />
+        </Layout>
+      </Route>
+      <Route path="/clubs/:id">
+        {(params) => (
+          <Layout>
+            <ClubDetail routeParams={params} />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/search">
+        <Layout>
+          <Search />
+        </Layout>
+      </Route>
+      <Route path="/profile">
+        <Layout>
+          <Profile />
+        </Layout>
+      </Route>
       <Route>
         <Layout>
-          <Switch>
-            <Route path="/" component={Discover} />
-            <Route path="/events/new" component={CreateEvent} />
-            <Route path="/events/:id">
-              {(params) => <EventDetail routeParams={params} />}
-            </Route>
-            <Route path="/clubs" component={MyClubs} />
-            <Route path="/clubs/:id">
-              {(params) => <ClubDetail routeParams={params} />}
-            </Route>
-            <Route path="/search" component={Search} />
-            <Route path="/profile" component={Profile} />
-            <Route component={NotFound} />
-          </Switch>
+          <NotFound />
         </Layout>
       </Route>
     </Switch>
