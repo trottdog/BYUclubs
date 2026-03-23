@@ -12,7 +12,6 @@ function getCookieOptions(): CookieOptions {
     path: "/",
     sameSite: "lax",
     secure: isProduction,
-    signed: true,
   };
 }
 
@@ -21,7 +20,7 @@ export function getCookieSecret(): string {
 }
 
 export function getAuthUserId(req: Request): number | null {
-  const rawUserId = req.signedCookies?.[AUTH_COOKIE_NAME];
+  const rawUserId = req.signedCookies?.[AUTH_COOKIE_NAME] ?? req.cookies?.[AUTH_COOKIE_NAME];
   const userId = Number(rawUserId);
 
   if (!Number.isInteger(userId) || userId <= 0) {
@@ -41,6 +40,5 @@ export function clearAuthSession(res: any): void {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,
-    signed: true,
   });
 }
