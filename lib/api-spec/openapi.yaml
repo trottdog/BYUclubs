@@ -1,0 +1,714 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: BYUconnect API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: events
+    description: Events
+  - name: clubs
+    description: Clubs
+  - name: users
+    description: Users
+  - name: buildings
+    description: Buildings
+  - name: categories
+    description: Categories
+  - name: search
+    description: Search
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: Get events
+      parameters:
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+        - in: query
+          name: buildingId
+          schema:
+            type: integer
+        - in: query
+          name: clubId
+          schema:
+            type: integer
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventRequest"
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get event by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /events/{id}/save:
+    post:
+      operationId: saveEvent
+      tags: [events]
+      summary: Save/unsave event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Save toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaveToggleResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /events/{id}/reserve:
+    post:
+      operationId: reserveEvent
+      tags: [events]
+      summary: Reserve/cancel event reservation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reservation toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationToggleResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Event full
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs:
+    get:
+      operationId: getClubs
+      tags: [clubs]
+      summary: Get clubs
+      parameters:
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: myClubs
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of clubs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Club"
+
+  /clubs/{id}:
+    get:
+      operationId: getClub
+      tags: [clubs]
+      summary: Get club by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Club detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{id}/join:
+    post:
+      operationId: joinClub
+      tags: [clubs]
+      summary: Join/leave club
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Membership toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinToggleResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /buildings:
+    get:
+      operationId: getBuildings
+      tags: [buildings]
+      summary: Get all buildings
+      responses:
+        "200":
+          description: List of buildings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Building"
+
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: Get all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /users/profile:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get current user profile with stats
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Search events and clubs
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required: [email, password, firstName, lastName]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        createdAt:
+          type: string
+      required: [id, email, firstName, lastName, createdAt]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required: [user]
+
+    Building:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        abbreviation:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: string
+      required: [id, name, abbreviation, latitude, longitude, address]
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+      required: [id, name, color, icon]
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        buildingId:
+          type: integer
+        buildingName:
+          type: string
+        roomNumber:
+          type: string
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        clubId:
+          type: integer
+        clubName:
+          type: string
+        capacity:
+          type: integer
+        reservedCount:
+          type: integer
+        hasFood:
+          type: boolean
+        coverImageUrl:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        isSaved:
+          type: boolean
+        isReserved:
+          type: boolean
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required: [id, title, description, startTime, endTime, buildingId, buildingName, roomNumber, categoryId, categoryName, categoryColor, clubId, clubName, capacity, reservedCount, hasFood, tags, isSaved, isReserved, latitude, longitude]
+
+    EventDetail:
+      allOf:
+        - $ref: "#/components/schemas/Event"
+        - type: object
+          properties:
+            clubAvatar:
+              type: string
+            clubDescription:
+              type: string
+
+    CreateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        buildingId:
+          type: integer
+        roomNumber:
+          type: string
+        categoryId:
+          type: integer
+        clubId:
+          type: integer
+        capacity:
+          type: integer
+        hasFood:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+      required: [title, description, startTime, endTime, buildingId, roomNumber, categoryId, clubId, capacity, hasFood, tags]
+
+    SaveToggleResponse:
+      type: object
+      properties:
+        saved:
+          type: boolean
+      required: [saved]
+
+    ReservationToggleResponse:
+      type: object
+      properties:
+        reserved:
+          type: boolean
+        reservedCount:
+          type: integer
+      required: [reserved, reservedCount]
+
+    Club:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        memberCount:
+          type: integer
+        avatarInitials:
+          type: string
+        avatarColor:
+          type: string
+        coverImageUrl:
+          type: string
+          nullable: true
+        contactEmail:
+          type: string
+        isMember:
+          type: boolean
+      required: [id, name, description, categoryId, categoryName, categoryColor, memberCount, avatarInitials, avatarColor, contactEmail, isMember]
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: integer
+        clubId:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+      required: [id, clubId, title, body, createdAt]
+
+    ClubDetail:
+      allOf:
+        - $ref: "#/components/schemas/Club"
+        - type: object
+          properties:
+            upcomingEvents:
+              type: array
+              items:
+                $ref: "#/components/schemas/Event"
+            announcements:
+              type: array
+              items:
+                $ref: "#/components/schemas/Announcement"
+
+    JoinToggleResponse:
+      type: object
+      properties:
+        joined:
+          type: boolean
+        memberCount:
+          type: integer
+      required: [joined, memberCount]
+
+    UserProfile:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        savedEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        reservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        savedCount:
+          type: integer
+        reservationsCount:
+          type: integer
+      required: [user, savedEvents, reservations, savedCount, reservationsCount]
+
+    SearchResults:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        clubs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Club"
+      required: [events, clubs]

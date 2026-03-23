@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "BYUconnect"
+version = "1.0.0"
+id = "artifacts/byu-connect"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25416
+
+[services.development]
+run = "pnpm --filter @workspace/byu-connect run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/byu-connect", "run", "build" ]
+publicDir = "artifacts/byu-connect/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25416"
+BASE_PATH = "/"

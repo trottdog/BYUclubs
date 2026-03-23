@@ -1,0 +1,25 @@
+packages:
+  "maplibre-gl": "Map rendering engine for MapTiler integration"
+  "react-map-gl": "React wrapper for MapLibre GL JS"
+  "date-fns": "For date and time formatting and comparisons"
+  "framer-motion": "For page transitions and smooth micro-interactions"
+  "@hookform/resolvers": "Zod resolver for robust form validation"
+  "react-hook-form": "Form state management"
+  "clsx": "Class name merging"
+  "tailwind-merge": "Class name merging for Tailwind"
+
+images:
+  - path: "artifacts/byu-connect/public/images/auth-bg.png"
+    description: "Abstract minimal 3D illustration of university campus architecture with soft lighting and navy blue accents, clean Instagram aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/placeholder-event.png"
+    description: "Soft abstract gradient background in navy and blue colors, minimal soft blur, instagram aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/placeholder-club.png"
+    description: "Soft abstract gradient background in light slate gray and subtle BYU blue, very minimal and clean"
+    aspect_ratio: "16:9"
+
+notes:
+  - Using session-based authentication from /api/auth/me
+  - Map view relies on MapTiler with provided API key
+  - Using generated React Query hooks from @workspace/api-client-react
