@@ -435,96 +435,99 @@ export default function DiscoverPage() {
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
         ) : view === "map" ? (
-          <div className="absolute inset-0 flex h-[600px] flex-col gap-3">
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowMapFilters((v) => !v)}
-                className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-semibold shadow-sm"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-                {(timeFilter !== "all" || selectedCategoryId !== null || foodOnly) && (
-                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Active</span>
-                )}
-              </button>
-            </div>
-
-            {showMapFilters && (
-              <div className="max-h-[220px] overflow-y-auto rounded-xl border bg-card p-3 shadow-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {TIME_FILTERS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        onClick={() => setTimeFilter(preset.id)}
-                        className={cn(
-                          "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                          timeFilter === preset.id
-                            ? "border-primary bg-primary text-white"
-                            : "border-border bg-card text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarClock className="w-3.5 h-3.5" />
-                          {preset.label}
-                        </span>
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setFoodOnly((v) => !v)}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                        foodOnly
-                          ? "border-primary bg-primary text-white"
-                          : "border-border bg-card text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        <Coffee className="w-3.5 h-3.5" />
-                        Food provided
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => setSelectedCategoryId(null)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
-                        selectedCategoryId === null
-                          ? "bg-primary border-primary text-white"
-                          : "bg-card border-border text-foreground hover:bg-muted"
-                      )}
-                    >
-                      All
-                    </button>
-                    {categories?.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
-                          selectedCategoryId === cat.id
-                            ? "text-white"
-                            : "bg-card border-border text-foreground hover:bg-muted"
-                        )}
-                        style={{
-                          backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
-                          borderColor: selectedCategoryId === cat.id ? cat.color : undefined
-                        }}
-                      >
-                        {selectedCategoryId !== cat.id && (
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                        )}
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-
-              </div>
-            )}
-
+          <div className="absolute inset-0 h-[600px]">
             <div className="min-h-0 flex-1">
-              <MapView events={filteredEvents} buildings={buildings || []} />
+              <MapView
+                events={filteredEvents}
+                buildings={buildings || []}
+                filterOverlay={
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setShowMapFilters((v) => !v)}
+                      className="flex h-10 items-center gap-2 rounded-full border border-white/70 bg-white/92 px-3.5 text-sm font-semibold text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-white"
+                    >
+                      <Filter className="h-4 w-4" />
+                      Filters
+                      {(timeFilter !== "all" || selectedCategoryId !== null || foodOnly) && (
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Active</span>
+                      )}
+                    </button>
+
+                    {showMapFilters && (
+                      <div className="max-h-[220px] w-[min(360px,calc(100vw-8rem))] overflow-y-auto rounded-2xl border border-white/70 bg-white/95 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {TIME_FILTERS.map((preset) => (
+                            <button
+                              key={preset.id}
+                              onClick={() => setTimeFilter(preset.id)}
+                              className={cn(
+                                "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                                timeFilter === preset.id
+                                  ? "border-primary bg-primary text-white"
+                                  : "border-border bg-card text-foreground hover:bg-muted"
+                              )}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarClock className="w-3.5 h-3.5" />
+                                {preset.label}
+                              </span>
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setFoodOnly((v) => !v)}
+                            className={cn(
+                              "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                              foodOnly
+                                ? "border-primary bg-primary text-white"
+                                : "border-border bg-card text-foreground hover:bg-muted"
+                            )}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <Coffee className="w-3.5 h-3.5" />
+                              Food provided
+                            </span>
+                          </button>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => setSelectedCategoryId(null)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
+                              selectedCategoryId === null
+                                ? "bg-primary border-primary text-white"
+                                : "bg-card border-border text-foreground hover:bg-muted"
+                            )}
+                          >
+                            All
+                          </button>
+                          {categories?.map((cat) => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
+                              className={cn(
+                                "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
+                                selectedCategoryId === cat.id
+                                  ? "text-white"
+                                  : "bg-card border-border text-foreground hover:bg-muted"
+                              )}
+                              style={{
+                                backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
+                                borderColor: selectedCategoryId === cat.id ? cat.color : undefined
+                              }}
+                            >
+                              {selectedCategoryId !== cat.id && (
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                              )}
+                              {cat.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                }
+              />
             </div>
           </div>
         ) : (

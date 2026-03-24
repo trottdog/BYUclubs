@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import Map, { Marker, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Event, Building } from "@workspace/api-client-react";
-import { Building2, CalendarClock, MapPin } from "lucide-react";
+import { Building2, CalendarClock } from "lucide-react";
 import { Link } from "wouter";
 
 interface MapViewProps {
   events: Event[];
   buildings: Building[];
+  filterOverlay?: ReactNode;
 }
 
-export function MapView({ events, buildings }: MapViewProps) {
+export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
   const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(null);
 
   // Group events by building
@@ -41,6 +42,12 @@ export function MapView({ events, buildings }: MapViewProps) {
   return (
     <div className="grid h-full w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
       <div className="relative min-h-[420px] border-b border-border bg-muted lg:min-h-full lg:border-b-0 lg:border-r">
+        {filterOverlay ? (
+          <div className="absolute top-3 right-20 z-10 max-w-[calc(100%-6rem)]">
+            {filterOverlay}
+          </div>
+        ) : null}
+
         <Map
           initialViewState={{
             longitude: -111.6493,
@@ -68,14 +75,27 @@ export function MapView({ events, buildings }: MapViewProps) {
               >
                 <button
                   type="button"
-                  className="relative cursor-pointer transition-transform duration-200 hover:scale-110"
+                  className="group relative cursor-pointer transition-transform duration-200 hover:scale-105"
                   aria-label={`Show ${bEvents.length} events at ${building.name}`}
                 >
-                  <MapPin
-                    className={`h-10 w-10 drop-shadow-md ${isSelected ? "scale-110 text-destructive fill-current" : "text-primary fill-current"}`}
-                    strokeWidth={1.8}
-                  />
-                  <div className="absolute top-1 right-0 min-w-[20px] -translate-y-1/2 translate-x-1/2 rounded-full border-2 border-white bg-slate-900 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-sm">
+                  <div
+                    className={`relative flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-white px-2 shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition-all duration-200 ${
+                      isSelected
+                        ? "bg-foreground text-white"
+                        : "bg-white/95 text-foreground group-hover:bg-white"
+                    }`}
+                  >
+                    <div
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        isSelected ? "bg-white" : "bg-[#ef476f]"
+                      }`}
+                    />
+                  </div>
+                  <div
+                    className={`absolute -right-1.5 -top-1.5 min-w-[18px] rounded-full border-2 border-white px-1.5 py-0.5 text-center text-[10px] font-bold leading-none shadow-sm ${
+                      isSelected ? "bg-[#ef476f] text-white" : "bg-slate-900 text-white"
+                    }`}
+                  >
                     {bEvents.length}
                   </div>
                 </button>
