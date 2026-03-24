@@ -58,37 +58,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="px-4 pb-3">
-          <div className="rounded-xl border border-secondary-foreground/20 bg-secondary-foreground/5 p-4 shadow-sm">
-            <div className="flex items-start gap-2">
-              <Activity className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-secondary-foreground/70">
-                  Campus Snapshot
-                </p>
-                <p className="mt-1 text-xs text-secondary-foreground/80 leading-relaxed">
-                  Live totals to help you see what is happening across BYUconnect right now.
-                </p>
+        {isSuperAdmin && (
+          <div className="px-4 pb-3">
+            <div className="rounded-xl border border-secondary-foreground/20 bg-secondary-foreground/5 p-4 shadow-sm">
+              <div className="flex items-start gap-2">
+                <Activity className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-secondary-foreground/70">
+                    Campus Snapshot
+                  </p>
+                  <p className="mt-1 text-xs text-secondary-foreground/80 leading-relaxed">
+                    Live totals to help you see what is happening across BYUconnect right now.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
-                <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  Events
-                </p>
-                <p className="mt-1 text-2xl font-extrabold text-white">{totalEvents}</p>
-              </div>
-              <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
-                <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
-                  Clubs
-                </p>
-                <p className="mt-1 text-2xl font-extrabold text-white">{totalClubs}</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
+                  <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Events
+                  </p>
+                  <p className="mt-1 text-2xl font-extrabold text-white">{totalEvents}</p>
+                </div>
+                <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
+                  <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5" />
+                    Clubs
+                  </p>
+                  <p className="mt-1 text-2xl font-extrabold text-white">{totalClubs}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="p-4 border-t border-secondary-foreground/10">
           {user ? (
