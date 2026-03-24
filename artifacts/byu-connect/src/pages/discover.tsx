@@ -435,12 +435,11 @@ export default function DiscoverPage() {
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
         ) : view === "map" ? (
-          <div className="absolute inset-0 h-[600px] rounded-2xl overflow-hidden shadow-sm border">
-            <MapView events={filteredEvents} buildings={buildings || []} />
-            <div className="absolute top-3 right-3 z-20 w-[min(92vw,380px)]">
+          <div className="absolute inset-0 flex h-[600px] flex-col gap-3">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShowMapFilters((v) => !v)}
-                className="ml-auto flex items-center gap-2 rounded-lg border bg-card/95 px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur"
+                className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-semibold shadow-sm"
               >
                 <Filter className="w-4 h-4" />
                 Filters
@@ -448,9 +447,10 @@ export default function DiscoverPage() {
                   <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Active</span>
                 )}
               </button>
+            </div>
 
-              {showMapFilters && (
-                <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-xl border bg-card/95 p-3 shadow-lg backdrop-blur">
+            {showMapFilters && (
+              <div className="max-h-[220px] overflow-y-auto rounded-xl border bg-card p-3 shadow-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     {TIME_FILTERS.map((preset) => (
                       <button
@@ -519,8 +519,12 @@ export default function DiscoverPage() {
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+
+              </div>
+            )}
+
+            <div className="min-h-0 flex-1">
+              <MapView events={filteredEvents} buildings={buildings || []} />
             </div>
           </div>
         ) : (

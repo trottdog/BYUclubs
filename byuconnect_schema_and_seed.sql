@@ -150,7 +150,7 @@ INSERT INTO categories (name, color, icon) VALUES
 --      Technology=6, Religion & Faith=7, Career & Professional=8, International=9, Food & Cooking=10
 
 
--- Clubs  (12 clubs)
+-- Clubs  (13 clubs)
 INSERT INTO clubs (name, description, category_id, avatar_initials, avatar_color, contact_email) VALUES
   ('BYU CS Society',
    'A community of computer science enthusiasts dedicated to learning, networking, and building the future of technology together.',
@@ -235,7 +235,8 @@ INSERT INTO users (email, password_hash, first_name, last_name) VALUES
   ('culinary_admin@byu.edu', '$2b$12$gLWh3PHGKBQfODGObOydeeXwvHUVeI1ELazWxLxwWFIgLbZK/BQG2', 'Culinary', 'Admin'),
   ('lbs_admin@byu.edu', '$2b$12$6b8euP.6NrMB90J9P96nnebO7.dM/rvbrCyoy39Jr0qT1zuo0KUpi', 'LDS', 'Admin'),
   ('byu_admin@byu.edu', '$2b$12$HGifI.uyItfo/R1wpgZlO./bi9GjpITLQJZrdfrYs5yvxcHI.IOyG', 'BYU', 'Admin');
--- IDs map to clubs 1..12 in insertion order above
+-- IDs map to clubs 1..13 in insertion order above.
+-- User 13 is the global BYU admin account and is not tied to a single club membership by default.
 
 -- Club memberships
 INSERT INTO club_memberships (user_id, club_id, role) VALUES
@@ -513,5 +514,5 @@ INSERT INTO announcements (club_id, title, body) VALUES
 
 -- =============================================================================
 -- Done. Summary:
---   10 buildings, 10 categories, 12 clubs, 40 events, 10 announcements
+--   10 buildings, 10 categories, 13 clubs, 13 users, 12 club-admin memberships, 40 events, 10 announcements
 -- =============================================================================

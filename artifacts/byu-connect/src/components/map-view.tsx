@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import { useEffect, useMemo, useState } from "react";
+import Map, { Marker, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Event, Building } from "@workspace/api-client-react";
-import { MapPin } from "lucide-react";
+import { Building2, CalendarClock, MapPin } from "lucide-react";
 import { Link } from "wouter";
 
 interface MapViewProps {
@@ -11,7 +11,7 @@ interface MapViewProps {
 }
 
 export function MapView({ events, buildings }: MapViewProps) {
-  const [popupInfo, setPopupInfo] = useState<{ building: Building; buildingEvents: Event[] } | null>(null);
+  const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(null);
 
   // Group events by building
   const groupedEvents = useMemo(() => {
@@ -24,70 +24,132 @@ export function MapView({ events, buildings }: MapViewProps) {
   }, [events]);
 
   const activeBuildings = buildings.filter(b => groupedEvents[b.id] && groupedEvents[b.id].length > 0);
+  const selectedBuilding = activeBuildings.find((building) => building.id === selectedBuildingId) ?? null;
+  const selectedBuildingEvents = selectedBuilding ? groupedEvents[selectedBuilding.id] ?? [] : [];
+
+  useEffect(() => {
+    if (!activeBuildings.length) {
+      setSelectedBuildingId(null);
+      return;
+    }
+
+    if (selectedBuildingId === null || !activeBuildings.some((building) => building.id === selectedBuildingId)) {
+      setSelectedBuildingId(activeBuildings[0].id);
+    }
+  }, [activeBuildings, selectedBuildingId]);
 
   return (
-    <div className="w-full h-full rounded-2xl overflow-hidden shadow-sm border border-border bg-muted relative">
-      <Map
-        initialViewState={{
-          longitude: -111.6493,
-          latitude: 40.2518,
-          zoom: 14.5
-        }}
-        mapStyle="https://api.maptiler.com/maps/019ac349-d5ee-795c-85cf-2cc023e13ad5/style.json?key=HalOFfShOFGRip19eGRc"
-      >
-        <NavigationControl position="top-right" />
-        
-        {activeBuildings.map((building) => {
-          const bEvents = groupedEvents[building.id];
-          return (
-            <Marker
-              key={building.id}
-              longitude={building.longitude}
-              latitude={building.latitude}
-              anchor="bottom"
-              onClick={e => {
-                e.originalEvent.stopPropagation();
-                setPopupInfo({ building, buildingEvents: bEvents });
-              }}
-            >
-              <div className="relative cursor-pointer group hover:scale-110 transition-transform duration-200">
-                <MapPin className="w-10 h-10 text-primary drop-shadow-md fill-primary/20" />
-                <div className="absolute top-1 right-0 translate-x-1/2 -translate-y-1/2 bg-destructive text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border-2 border-white min-w-[20px] text-center">
-                  {bEvents.length}
-                </div>
-              </div>
-            </Marker>
-          );
-        })}
+    <div className="grid h-full w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div className="relative min-h-[420px] border-b border-border bg-muted lg:min-h-full lg:border-b-0 lg:border-r">
+        <Map
+          initialViewState={{
+            longitude: -111.6493,
+            latitude: 40.2518,
+            zoom: 14.5
+          }}
+          mapStyle="https://api.maptiler.com/maps/019ac349-d5ee-795c-85cf-2cc023e13ad5/style.json?key=HalOFfShOFGRip19eGRc"
+        >
+          <NavigationControl position="top-right" />
+          
+          {activeBuildings.map((building) => {
+            const bEvents = groupedEvents[building.id];
+            const isSelected = building.id === selectedBuildingId;
 
-        {popupInfo && (
-          <Popup
-            anchor="bottom"
-            longitude={popupInfo.building.longitude}
-            latitude={popupInfo.building.latitude}
-            offset={[0, -40]}
-            onClose={() => setPopupInfo(null)}
-            closeButton={true}
-            closeOnClick={false}
-            className="rounded-2xl overflow-hidden"
-            maxWidth="300px"
-          >
-            <div className="p-3">
-              <h4 className="font-bold text-base mb-1 text-foreground border-b pb-2">{popupInfo.building.name}</h4>
-              <div className="mt-2 space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                {popupInfo.buildingEvents.map(ev => (
-                  <Link key={ev.id} href={`/events/${ev.id}`} className="block group">
-                    <div className="p-2 bg-muted/50 rounded-lg group-hover:bg-primary/5 transition-colors border border-transparent group-hover:border-primary/20">
-                      <p className="text-sm font-semibold text-foreground group-hover:text-primary line-clamp-1">{ev.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{new Date(ev.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {ev.clubName}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+            return (
+              <Marker
+                key={building.id}
+                longitude={building.longitude}
+                latitude={building.latitude}
+                anchor="bottom"
+                onClick={e => {
+                  e.originalEvent.stopPropagation();
+                  setSelectedBuildingId(building.id);
+                }}
+              >
+                <button
+                  type="button"
+                  className="relative cursor-pointer transition-transform duration-200 hover:scale-110"
+                  aria-label={`Show ${bEvents.length} events at ${building.name}`}
+                >
+                  <MapPin
+                    className={`h-10 w-10 drop-shadow-md ${isSelected ? "scale-110 text-destructive fill-current" : "text-primary fill-current"}`}
+                    strokeWidth={1.8}
+                  />
+                  <div className="absolute top-1 right-0 min-w-[20px] -translate-y-1/2 translate-x-1/2 rounded-full border-2 border-white bg-slate-900 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-sm">
+                    {bEvents.length}
+                  </div>
+                </button>
+              </Marker>
+            );
+          })}
+        </Map>
+      </div>
+
+      <aside className="flex h-full min-h-[420px] flex-col bg-card">
+        <div className="border-b border-border px-5 py-4">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            Building Events
+          </p>
+          {selectedBuilding ? (
+            <div className="mt-3">
+              <h3 className="text-xl font-extrabold text-foreground">{selectedBuilding.name}</h3>
+              <p className="mt-1 text-sm font-medium text-muted-foreground">
+                {selectedBuilding.abbreviation} • {selectedBuilding.address}
+              </p>
             </div>
-          </Popup>
-        )}
-      </Map>
+          ) : (
+            <div className="mt-3">
+              <h3 className="text-lg font-bold text-foreground">Select a pin</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Click a building marker to see the events happening there.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {!selectedBuilding ? (
+            <div className="flex h-full min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/35 px-6 text-center">
+              <Building2 className="mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="font-semibold text-foreground">No building selected</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pick any solid pin on the map to load its event list here.
+              </p>
+            </div>
+          ) : selectedBuildingEvents.length === 0 ? (
+            <div className="flex h-full min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/35 px-6 text-center">
+              <CalendarClock className="mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="font-semibold text-foreground">No events in this building</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try another building or adjust your discover filters.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {selectedBuildingEvents.map((ev) => (
+                <Link key={ev.id} href={`/events/${ev.id}`} className="block">
+                  <div className="rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-1 text-sm font-extrabold text-foreground">{ev.title}</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">
+                          {new Date(ev.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} • {ev.clubName}
+                        </p>
+                      </div>
+                      <span
+                        className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                        style={{ backgroundColor: `${ev.categoryColor}20`, color: ev.categoryColor }}
+                      >
+                        {ev.categoryName}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }
