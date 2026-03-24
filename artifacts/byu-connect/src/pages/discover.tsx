@@ -9,6 +9,13 @@ import {
 import { EventCard } from "@/components/event-card";
 import { ClubCard } from "@/components/club-card";
 import { MapView } from "@/components/map-view";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   Building2,
@@ -270,10 +277,88 @@ export default function DiscoverPage() {
 
       {view !== "map" && (
         <>
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Mobile list view: compact dropdowns */}
+          <div className="flex flex-col gap-3 md:hidden pb-1">
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">When</p>
+              <Select
+                value={timeFilter}
+                onValueChange={(v) => setTimeFilter(v as TimeFilter)}
+              >
+                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
+                  <span className="flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
+                  {TIME_FILTERS.map((preset) => (
+                    <SelectItem key={preset.id} value={preset.id} className="font-medium">
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Category</p>
+              <Select
+                value={selectedCategoryId === null ? "all" : String(selectedCategoryId)}
+                onValueChange={(v) => {
+                  if (v === "all") setSelectedCategoryId(null);
+                  else {
+                    const id = parseInt(v, 10);
+                    setSelectedCategoryId(Number.isFinite(id) ? id : null);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
+                  <SelectItem value="all" className="font-medium">
+                    All categories
+                  </SelectItem>
+                  {categories?.map((cat) => (
+                    <SelectItem key={cat.id} value={String(cat.id)} className="font-medium">
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Food</p>
+              <Select
+                value={foodOnly ? "food" : "any"}
+                onValueChange={(v) => setFoodOnly(v === "food")}
+              >
+                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
+                  <span className="flex items-center gap-2">
+                    <Coffee className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-50">
+                  <SelectItem value="any" className="font-medium">
+                    All events
+                  </SelectItem>
+                  <SelectItem value="food" className="font-medium">
+                    Food provided only
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* md+: chip filters (list view) */}
+          <div className="hidden md:flex flex-wrap items-center gap-2">
             {TIME_FILTERS.map((preset) => (
               <button
                 key={preset.id}
+                type="button"
                 onClick={() => setTimeFilter(preset.id)}
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
@@ -289,6 +374,7 @@ export default function DiscoverPage() {
               </button>
             ))}
             <button
+              type="button"
               onClick={() => setFoodOnly((v) => !v)}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
@@ -304,8 +390,9 @@ export default function DiscoverPage() {
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pb-2">
+          <div className="hidden md:flex flex-wrap items-center gap-2 pb-2">
             <button
+              type="button"
               onClick={() => setSelectedCategoryId(null)}
               className={cn(
                 "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
@@ -319,6 +406,7 @@ export default function DiscoverPage() {
             {categories?.map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
                 className={cn(
                   "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
