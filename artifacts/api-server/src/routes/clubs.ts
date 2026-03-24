@@ -288,15 +288,13 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
   res.json(GetClubResponse.parse(detail));
 });
 
-router.get("/clubs/:id/can-manage", async (req, res): Promise<void> => {
+async function handleClubCanManage(req: any, res: any, id: number): Promise<void> {
   const userId = getAuthUserId(req);
   if (!userId) {
     res.json({ canManage: false });
     return;
   }
 
-  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const id = parseInt(raw, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid club ID." });
     return;
@@ -310,6 +308,19 @@ router.get("/clubs/:id/can-manage", async (req, res): Promise<void> => {
 
   const allowed = await canManageClub(userId, id);
   res.json({ canManage: allowed });
+}
+
+router.get("/clubs/:id/can-manage", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  await handleClubCanManage(req, res, id);
+});
+
+/** Query id — single-path alias for Vercel. */
+router.get("/club-can-manage", async (req, res): Promise<void> => {
+  const q = req.query?.id;
+  const id = parseInt(typeof q === "string" ? q : Array.isArray(q) ? q[0] : String(q ?? ""), 10);
+  await handleClubCanManage(req, res, id);
 });
 
 router.patch("/clubs/:id", async (req, res): Promise<void> => {

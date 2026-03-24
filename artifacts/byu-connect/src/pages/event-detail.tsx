@@ -91,7 +91,7 @@ export default function EventDetailPage({
     if (isNaN(eventId)) return;
     let mounted = true;
 
-    fetch(`/api/events/${eventId}/can-manage`, { credentials: "include" })
+    fetch(`/api/event-can-manage?id=${encodeURIComponent(String(eventId))}`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return { canManage: false };
         return res.json();
@@ -119,7 +119,7 @@ export default function EventDetailPage({
     }
     let mounted = true;
 
-    fetch(`/api/events/${eventId}/attendees`, { credentials: "include" })
+    fetch(`/api/event-attendees?id=${encodeURIComponent(String(eventId))}`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return { attendees: [] };
         return res.json();

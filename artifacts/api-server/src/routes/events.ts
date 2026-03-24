@@ -251,15 +251,13 @@ router.post("/events", async (req, res): Promise<void> => {
   res.status(201).json(events[0]);
 });
 
-router.get("/events/:id/can-manage", async (req, res): Promise<void> => {
+async function handleEventCanManage(req: any, res: any, id: number): Promise<void> {
   const userId = getAuthUserId(req);
   if (!userId) {
     res.json({ canManage: false });
     return;
   }
 
-  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const id = parseInt(raw, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid event ID." });
     return;
@@ -277,17 +275,28 @@ router.get("/events/:id/can-manage", async (req, res): Promise<void> => {
 
   const allowed = await canManageClub(userId, event.clubId);
   res.json({ canManage: allowed });
+}
+
+router.get("/events/:id/can-manage", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  await handleEventCanManage(req, res, id);
 });
 
-router.get("/events/:id/attendees", async (req, res): Promise<void> => {
+/** Query id — single-path alias for Vercel. */
+router.get("/event-can-manage", async (req, res): Promise<void> => {
+  const q = req.query?.id;
+  const id = parseInt(typeof q === "string" ? q : Array.isArray(q) ? q[0] : String(q ?? ""), 10);
+  await handleEventCanManage(req, res, id);
+});
+
+async function handleEventAttendees(req: any, res: any, id: number): Promise<void> {
   const userId = getAuthUserId(req);
   if (!userId) {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
 
-  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const id = parseInt(raw, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid event ID." });
     return;
@@ -328,6 +337,19 @@ router.get("/events/:id/attendees", async (req, res): Promise<void> => {
       reservedAt: a.reservedAt.toISOString(),
     })),
   });
+}
+
+router.get("/events/:id/attendees", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  await handleEventAttendees(req, res, id);
+});
+
+/** Query id — single-path alias for Vercel. */
+router.get("/event-attendees", async (req, res): Promise<void> => {
+  const q = req.query?.id;
+  const id = parseInt(typeof q === "string" ? q : Array.isArray(q) ? q[0] : String(q ?? ""), 10);
+  await handleEventAttendees(req, res, id);
 });
 
 router.get("/events/:id", async (req, res): Promise<void> => {

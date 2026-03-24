@@ -66,7 +66,7 @@ export default function ClubDetailPage({
     if (isNaN(clubId)) return;
     let isMounted = true;
 
-    fetch(`/api/clubs/${clubId}/can-manage`, { credentials: "include" })
+    fetch(`/api/club-can-manage?id=${encodeURIComponent(String(clubId))}`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return { canManage: false };
         return res.json();

@@ -36,18 +36,22 @@ async function requireSuperAdmin(req: any, res: any): Promise<number | null> {
   return userId;
 }
 
-router.get("/admin/can-manage", async (req, res): Promise<void> => {
-  const userId = getAuthUserId(req);
+async function handleAdminCanManage(_req: any, res: any): Promise<void> {
+  const userId = getAuthUserId(_req);
   if (!userId) {
     res.json({ isSuperAdmin: false });
     return;
   }
   const email = await getUserEmail(userId);
   res.json({ isSuperAdmin: !!email && getSuperAdminEmailSet().has(email) });
-});
+}
 
-router.get("/admin/clubs/admins", async (req, res): Promise<void> => {
-  const userId = await requireSuperAdmin(req, res);
+router.get("/admin/can-manage", handleAdminCanManage);
+/** Single-path alias for Vercel (avoids multi-segment /api/admin/... routing issues). */
+router.get("/super-admin-can-manage", handleAdminCanManage);
+
+async function handleAdminClubsAdmins(_req: any, res: any): Promise<void> {
+  const userId = await requireSuperAdmin(_req, res);
   if (!userId) return;
 
   const clubs = await db
@@ -99,13 +103,20 @@ router.get("/admin/clubs/admins", async (req, res): Promise<void> => {
     }
     throw err;
   }
-});
+}
 
-router.post("/admin/clubs/:id/admins", async (req, res): Promise<void> => {
+router.get("/admin/clubs/admins", handleAdminClubsAdmins);
+router.get("/super-admin-clubs-admins", handleAdminClubsAdmins);
+
+async function handleAssignClubAdmin(req: any, res: any, clubIdParam: number | null): Promise<void> {
   const userId = await requireSuperAdmin(req, res);
   if (!userId) return;
 
-  const id = Number(req.params.id);
+  const id =
+    clubIdParam ??
+    Number(
+      typeof req.body?.clubId === "number" ? req.body.clubId : parseInt(String(req.body?.clubId ?? ""), 10),
+    );
   if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "Invalid club ID." });
     return;
@@ -164,24 +175,66 @@ router.post("/admin/clubs/:id/admins", async (req, res): Promise<void> => {
       role: "club_admin",
     },
   });
+}
+
+router.post("/admin/clubs/:id/admins", async (req, res): Promise<void> => {
+  const rawId = req.params.id;
+  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId);
+  await handleAssignClubAdmin(req, res, id);
 });
 
-router.delete("/admin/clubs/:id/admins/:userId", async (req, res): Promise<void> => {
+/** POST body: { clubId, email } — single-path alias for Vercel. */
+router.post("/super-admin-assign-club-admin", async (req, res): Promise<void> => {
+  await handleAssignClubAdmin(req, res, null);
+});
+
+async function handleRemoveClubAdmin(
+  req: any,
+  res: any,
+  clubId: number | null,
+  targetUserId: number | null,
+): Promise<void> {
   const requesterId = await requireSuperAdmin(req, res);
   if (!requesterId) return;
 
-  const clubId = Number(req.params.id);
-  const targetUserId = Number(req.params.userId);
-  if (!Number.isInteger(clubId) || !Number.isInteger(targetUserId) || clubId <= 0 || targetUserId <= 0) {
+  const rawClub =
+    clubId ??
+    Number(
+      typeof req.query?.clubId === "string"
+        ? parseInt(req.query.clubId, 10)
+        : parseInt(String(req.query?.clubId ?? ""), 10),
+    );
+  const rawUser =
+    targetUserId ??
+    Number(
+      typeof req.query?.userId === "string"
+        ? parseInt(req.query.userId, 10)
+        : parseInt(String(req.query?.userId ?? ""), 10),
+    );
+
+  if (!Number.isInteger(rawClub) || !Number.isInteger(rawUser) || rawClub <= 0 || rawUser <= 0) {
     res.status(400).json({ error: "Invalid club or user ID." });
     return;
   }
 
   await db
     .delete(clubMembershipsTable)
-    .where(and(eq(clubMembershipsTable.clubId, clubId), eq(clubMembershipsTable.userId, targetUserId)));
+    .where(and(eq(clubMembershipsTable.clubId, rawClub), eq(clubMembershipsTable.userId, rawUser)));
 
   res.json({ message: "Admin removed." });
+}
+
+router.delete("/admin/clubs/:id/admins/:userId", async (req, res): Promise<void> => {
+  const rawC = req.params.id;
+  const rawU = req.params.userId;
+  const clubId = Number(Array.isArray(rawC) ? rawC[0] : rawC);
+  const userId = Number(Array.isArray(rawU) ? rawU[0] : rawU);
+  await handleRemoveClubAdmin(req, res, clubId, userId);
+});
+
+/** DELETE query: clubId, userId — single-path alias for Vercel. */
+router.delete("/super-admin-remove-club-admin", async (req, res): Promise<void> => {
+  await handleRemoveClubAdmin(req, res, null, null);
 });
 
 export default router;

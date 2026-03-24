@@ -27,7 +27,10 @@ export default function MyClubsPage() {
     Promise.all(
       clubs.map(async (club) => {
         try {
-          const res = await fetch(`/api/clubs/${club.id}/can-manage`, { credentials: "include" });
+          const res = await fetch(
+            `/api/club-can-manage?id=${encodeURIComponent(String(club.id))}`,
+            { credentials: "include" },
+          );
           if (!res.ok) return null;
           const data = await res.json();
           return data?.canManage ? club.id : null;

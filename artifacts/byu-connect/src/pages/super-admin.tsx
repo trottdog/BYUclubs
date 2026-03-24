@@ -47,8 +47,8 @@ export default function SuperAdminPage() {
     setError(null);
     try {
       const [canManageRes, adminsRes] = await Promise.all([
-        fetch("/api/admin/can-manage", { credentials: "include" }),
-        fetch("/api/admin/clubs/admins", { credentials: "include" }),
+        fetch("/api/super-admin-can-manage", { credentials: "include" }),
+        fetch("/api/super-admin-clubs-admins", { credentials: "include" }),
       ]);
 
       const canManageData = await canManageRes.json().catch(() => ({ isSuperAdmin: false }));
@@ -76,11 +76,11 @@ export default function SuperAdminPage() {
     if (!email) return;
     setError(null);
     try {
-      const res = await fetch(`/api/admin/clubs/${clubId}/admins`, {
+      const res = await fetch("/api/super-admin-assign-club-admin", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ clubId, email }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error || "Failed to assign admin.");
@@ -94,10 +94,13 @@ export default function SuperAdminPage() {
   const removeAdmin = async (clubId: number, userId: number) => {
     setError(null);
     try {
-      const res = await fetch(`/api/admin/clubs/${clubId}/admins/${userId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/super-admin-remove-club-admin?clubId=${encodeURIComponent(String(clubId))}&userId=${encodeURIComponent(String(userId))}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error || "Failed to remove admin.");
       await loadData();
