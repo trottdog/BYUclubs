@@ -9,8 +9,12 @@ const DEFAULT_SUPER_ADMIN_EMAILS = ["byu_admin@byu.edu", "gunnjake@byu.edu"];
 
 function getSuperAdminEmailSet(): Set<string> {
   const configured = process.env.SUPER_ADMIN_EMAILS?.trim();
-  const source = configured?.length ? configured.split(",") : DEFAULT_SUPER_ADMIN_EMAILS;
-  return new Set(source.map((email) => email.trim().toLowerCase()).filter(Boolean));
+  const configuredList = configured?.length ? configured.split(",") : [];
+  return new Set(
+    [...DEFAULT_SUPER_ADMIN_EMAILS, ...configuredList]
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  );
 }
 
 async function getUserEmail(userId: number): Promise<string | null> {
