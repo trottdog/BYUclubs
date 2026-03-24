@@ -40,8 +40,8 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
   }, [activeBuildings, selectedBuildingId]);
 
   return (
-    <div className="grid h-full w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-      <div className="relative min-h-[420px] border-b border-border bg-muted lg:min-h-full lg:border-b-0 lg:border-r">
+    <div className="grid h-full min-h-0 w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div className="relative h-[360px] min-h-0 border-b border-border bg-muted lg:h-full lg:border-b-0 lg:border-r">
         {filterOverlay ? (
           <div className="absolute top-3 right-20 z-10 max-w-[calc(100%-6rem)]">
             {filterOverlay}
@@ -105,7 +105,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
         </Map>
       </div>
 
-      <aside className="flex h-full min-h-[420px] flex-col bg-card">
+      <aside className="flex h-[320px] min-h-0 flex-col overflow-hidden bg-card lg:h-full">
         <div className="border-b border-border px-5 py-4">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
             Building Events
@@ -127,7 +127,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {!selectedBuilding ? (
             <div className="flex h-full min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/35 px-6 text-center">
               <Building2 className="mb-3 h-10 w-10 text-muted-foreground" />
