@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import { eq, and, sql, ilike } from "drizzle-orm";
-import { db, clubsTable, categoriesTable, clubMembershipsTable, eventsTable, buildingsTable, announcementsTable, eventSavesTable, reservationsTable } from "@workspace/db";
+import { db, clubsTable, categoriesTable, clubMembershipsTable, eventsTable, buildingsTable, announcementsTable, eventSavesTable, reservationsTable, usersTable } from "@workspace/db";
 import {
   GetClubsQueryParams,
   GetClubsResponse,
@@ -13,6 +13,79 @@ import {
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router = Router();
+const DEFAULT_ADMIN_EMAILS = [
+  "byu_admin@byu.edu",
+  "gunnjake@byu.edu",
+];
+
+function getAdminEmailSet(): Set<string> {
+  const configured = process.env.ADMIN_EMAILS?.trim();
+  const source = configured?.length ? configured.split(",") : DEFAULT_ADMIN_EMAILS;
+  return new Set(
+    source
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+async function getUserEmail(userId: number): Promise<string | null> {
+  const [user] = await db
+    .select({ email: usersTable.email })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+
+  return user?.email?.toLowerCase() ?? null;
+}
+
+async function canManageClub(userId: number, clubId: number): Promise<boolean> {
+  const email = await getUserEmail(userId);
+  if (!email) return false;
+
+  if (getAdminEmailSet().has(email)) {
+    return true;
+  }
+
+  try {
+    const roleCheck = await db.execute(sql`
+      select role
+      from club_memberships
+      where user_id = ${userId} and club_id = ${clubId}
+      limit 1
+    `);
+    const role = String(roleCheck.rows?.[0]?.role ?? "").toLowerCase();
+    if (role === "owner" || role === "admin" || role === "club_admin") return true;
+  } catch (err: any) {
+    // Backward compatibility: if role column is not deployed yet, fall back gracefully.
+    if (err?.code !== "42703") {
+      throw err;
+    }
+  }
+
+  return false;
+}
+
+async function isClubAdminForJoinRestriction(userId: number, clubId: number): Promise<boolean> {
+  try {
+    const roleCheck = await db.execute(sql`
+      select role
+      from club_memberships
+      where user_id = ${userId} and club_id = ${clubId}
+      limit 1
+    `);
+    const role = String(roleCheck.rows?.[0]?.role ?? "").toLowerCase();
+    return role === "owner" || role === "admin" || role === "club_admin";
+  } catch (err: any) {
+    // If role column is not available yet, fall back to membership presence.
+    if (err?.code !== "42703") throw err;
+    const [membership] = await db
+      .select({ clubId: clubMembershipsTable.clubId })
+      .from(clubMembershipsTable)
+      .where(and(eq(clubMembershipsTable.userId, userId), eq(clubMembershipsTable.clubId, clubId)))
+      .limit(1);
+    return Boolean(membership);
+  }
+}
 
 async function buildClubList(userId: number | null, conditions: any[] = []) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -215,6 +288,117 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
   res.json(GetClubResponse.parse(detail));
 });
 
+router.get("/clubs/:id/can-manage", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.json({ canManage: false });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid club ID." });
+    return;
+  }
+
+  const [club] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id)).limit(1);
+  if (!club) {
+    res.status(404).json({ error: "Club not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, id);
+  res.json({ canManage: allowed });
+});
+
+router.patch("/clubs/:id", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid club ID." });
+    return;
+  }
+
+  const [club] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id)).limit(1);
+  if (!club) {
+    res.status(404).json({ error: "Club not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, id);
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to edit this club." });
+    return;
+  }
+
+  const input = req.body ?? {};
+  const updates: Record<string, unknown> = {};
+
+  if (typeof input.name === "string") {
+    const name = input.name.trim();
+    if (!name) {
+      res.status(400).json({ error: "Club name cannot be empty." });
+      return;
+    }
+    updates.name = name;
+  }
+
+  if (typeof input.description === "string") {
+    const description = input.description.trim();
+    if (!description) {
+      res.status(400).json({ error: "Club description cannot be empty." });
+      return;
+    }
+    updates.description = description;
+  }
+
+  if (typeof input.contactEmail === "string") {
+    const contactEmail = input.contactEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactEmail)) {
+      res.status(400).json({ error: "Invalid contactEmail format." });
+      return;
+    }
+    updates.contactEmail = contactEmail;
+  }
+
+  if (typeof input.coverImageUrl === "string") {
+    const coverImageUrl = input.coverImageUrl.trim();
+    updates.coverImageUrl = coverImageUrl.length ? coverImageUrl : null;
+  } else if (input.coverImageUrl === null) {
+    updates.coverImageUrl = null;
+  }
+
+  if (typeof input.categoryId === "number") {
+    const [category] = await db
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.id, input.categoryId))
+      .limit(1);
+    if (!category) {
+      res.status(400).json({ error: "Invalid categoryId." });
+      return;
+    }
+    updates.categoryId = input.categoryId;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No valid fields provided to update." });
+    return;
+  }
+
+  await db.update(clubsTable).set(updates).where(eq(clubsTable.id, id));
+  const refreshed = await buildClubList(userId, [eq(clubsTable.id, id)]);
+  res.json(refreshed[0]);
+});
+
 router.post("/clubs/:id/join", async (req, res): Promise<void> => {
   const userId = getAuthUserId(req);
   if (!userId) {
@@ -232,6 +416,12 @@ router.post("/clubs/:id/join", async (req, res): Promise<void> => {
   const [club] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id));
   if (!club) {
     res.status(404).json({ error: "Club not found." });
+    return;
+  }
+
+  const isAdminOfThisClub = await isClubAdminForJoinRestriction(userId, id);
+  if (isAdminOfThisClub) {
+    res.status(400).json({ error: "Club admins cannot join or leave their managed club." });
     return;
   }
 

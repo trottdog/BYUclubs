@@ -84,6 +84,7 @@ CREATE TABLE events (
 CREATE TABLE club_memberships (
   user_id   INTEGER     NOT NULL REFERENCES users(id),
   club_id   INTEGER     NOT NULL REFERENCES clubs(id),
+  role      TEXT        NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'club_admin', 'owner')),
   joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, club_id)
 );
@@ -197,9 +198,59 @@ INSERT INTO clubs (name, description, category_id, avatar_initials, avatar_color
 
   ('LDS Business Society',
    'Connecting faith and professional life through speaker series, networking, and career development for LDS business students.',
-   7, 'LBS', '#F59E0B', 'lbs@byu.edu');
+   7, 'LBS', '#F59E0B', 'lbs@byu.edu'),
+
+  ('Independent Students',
+   'A space for students to host personal events that are not tied to a specific club.',
+   9, 'IS', '#64748B', 'independent@byu.edu');
 -- IDs: BYU CS Society=1, ISA=2, Service Club=3, Finance=4, Photography=5,
---      Debate=6, Ballroom=7, Pre-Med=8, Entrepreneur=9, Hiking=10, Culinary=11, LBS=12
+--      Debate=6, Ballroom=7, Pre-Med=8, Entrepreneur=9, Hiking=10, Culinary=11, LBS=12, Independent=13
+
+-- Users
+-- Seeded club admin accounts (one unique admin per club):
+--   john_doe@byu.edu / byu123          -> BYU CS Society
+--   isa_admin@byu.edu / isa123         -> International Students Association
+--   service_admin@byu.edu / service123 -> BYU Service Club
+--   finance_admin@byu.edu / finance123 -> Finance & Investment Club
+--   photo_admin@byu.edu / photo123     -> BYU Photography Society
+--   debate_admin@byu.edu / debate123   -> Debate & Oratory Club
+--   ballroom_admin@byu.edu / ballroom123 -> BYU Ballroom Dance Club
+--   premed_admin@byu.edu / premed123   -> Pre-Med Association
+--   entrepreneur_admin@byu.edu / entre123 -> Entrepreneur Club
+--   hiking_admin@byu.edu / hiking123   -> BYU Hiking & Outdoors
+--   culinary_admin@byu.edu / culinary123 -> Culinary Arts Society
+--   lbs_admin@byu.edu / lbs123         -> LDS Business Society
+--   byu_admin@byu.edu / byuadmin123    -> Super Admin (manage all club admins)
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES
+  ('john_doe@byu.edu', '$2b$12$fG6I82SZW6gIr0Bi9P8e4..I.Dfs5sVRqDkG3YzDD9Hoz4qF6PRoa', 'John', 'Doe'),
+  ('isa_admin@byu.edu', '$2b$12$mldaFUbkdC9q6oMeUO9XWOB7h3ZzzCs2E07IwUqk7eL7UlugGVWQK', 'ISA', 'Admin'),
+  ('service_admin@byu.edu', '$2b$12$lXCqO1lHIFKIxXb8hK7aweQLiEZr3jVxyRDTrkrerLkg7mWa0AXyi', 'Service', 'Admin'),
+  ('finance_admin@byu.edu', '$2b$12$0ZnjAd9.xbOHbrjAw4t.HedE8pUFWC8GNZxRsO2PtyhB7Vlb2UAtC', 'Finance', 'Admin'),
+  ('photo_admin@byu.edu', '$2b$12$KVrgf/hRQ2MznxF8IqIjvu7/36Dm3GFDSrZq0qepQg8ZD5Tzi8bRi', 'Photo', 'Admin'),
+  ('debate_admin@byu.edu', '$2b$12$bDUNvbmQSqi3GjZkiLj3XOKsWOdxVfGSrQaSjdfEgEg3gRjqBZDEq', 'Debate', 'Admin'),
+  ('ballroom_admin@byu.edu', '$2b$12$FP7yV/t206PYQiZkCj2K5OFK6UfWiY9glJ0pvq210QXkzpjAWNLPy', 'Ballroom', 'Admin'),
+  ('premed_admin@byu.edu', '$2b$12$NpojTWYMdKnls0LXkbYSWeJCm44.VJTInuBqXNYgH1hbqq6zQvirG', 'PreMed', 'Admin'),
+  ('entrepreneur_admin@byu.edu', '$2b$12$xWr3iCG6ZwIX/fOU8oZCb.2xXQX9dLSkmsGCNp63SG1JhUx4.ooKG', 'Entrepreneur', 'Admin'),
+  ('hiking_admin@byu.edu', '$2b$12$dbypcu5oUHM34gm0Q9XjQefi4H4GskA6HUlP12FGLW3rC6vTIMMda', 'Hiking', 'Admin'),
+  ('culinary_admin@byu.edu', '$2b$12$gLWh3PHGKBQfODGObOydeeXwvHUVeI1ELazWxLxwWFIgLbZK/BQG2', 'Culinary', 'Admin'),
+  ('lbs_admin@byu.edu', '$2b$12$6b8euP.6NrMB90J9P96nnebO7.dM/rvbrCyoy39Jr0qT1zuo0KUpi', 'LDS', 'Admin'),
+  ('byu_admin@byu.edu', '$2b$12$HGifI.uyItfo/R1wpgZlO./bi9GjpITLQJZrdfrYs5yvxcHI.IOyG', 'BYU', 'Admin');
+-- IDs map to clubs 1..12 in insertion order above
+
+-- Club memberships
+INSERT INTO club_memberships (user_id, club_id, role) VALUES
+  (1, 1, 'club_admin'),
+  (2, 2, 'club_admin'),
+  (3, 3, 'club_admin'),
+  (4, 4, 'club_admin'),
+  (5, 5, 'club_admin'),
+  (6, 6, 'club_admin'),
+  (7, 7, 'club_admin'),
+  (8, 8, 'club_admin'),
+  (9, 9, 'club_admin'),
+  (10, 10, 'club_admin'),
+  (11, 11, 'club_admin'),
+  (12, 12, 'club_admin');
 
 
 -- Events  (40 events spread over 14 days from 2026-03-23)

@@ -1,11 +1,12 @@
-import { useParams, useLocation } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import { useGetClub, useJoinClub } from "@workspace/api-client-react";
-import { ArrowLeft, Users, Mail, Bell, Calendar as CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Users, Mail, Bell, Calendar as CalendarIcon, PlusCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { EventCard } from "@/components/event-card";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ClubDetailPage({
   routeParams,
@@ -25,7 +26,17 @@ export default function ClubDetailPage({
       ? clubIdFromParams
       : Number(clubIdFromPathMatch?.[1]);
   const [activeTab, setActiveTab] = useState<"about" | "activity" | "contact">("about");
+  const [canManage, setCanManage] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    contactEmail: "",
+    coverImageUrl: "",
+  });
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: club, isLoading, error } = useGetClub(clubId, {
     query: { enabled: !isNaN(clubId), queryKey: ["/api/clubs", clubId] }
@@ -39,6 +50,76 @@ export default function ClubDetailPage({
       }
     }
   });
+
+  useEffect(() => {
+    if (club) {
+      setEditForm({
+        name: club.name ?? "",
+        description: club.description ?? "",
+        contactEmail: club.contactEmail ?? "",
+        coverImageUrl: club.coverImageUrl ?? "",
+      });
+    }
+  }, [club]);
+
+  useEffect(() => {
+    if (isNaN(clubId)) return;
+    let isMounted = true;
+
+    fetch(`/api/clubs/${clubId}/can-manage`, { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) return { canManage: false };
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted) setCanManage(Boolean(data?.canManage));
+      })
+      .catch(() => {
+        if (isMounted) setCanManage(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [clubId]);
+
+  const saveClubChanges = async () => {
+    if (!club) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editForm.name,
+          description: editForm.description,
+          contactEmail: editForm.contactEmail,
+          coverImageUrl: editForm.coverImageUrl || null,
+        }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "Failed to update club.");
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["/api/clubs", clubId] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/clubs"] });
+      setIsEditMode(false);
+      toast({ title: "Club updated", description: "Your changes were saved." });
+    } catch (err: any) {
+      toast({
+        title: "Update failed",
+        description: err?.message || "Unable to save club changes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -58,7 +139,7 @@ export default function ClubDetailPage({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-12">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
       <button 
         onClick={() => history.back()} 
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold transition-colors w-fit bg-card px-4 py-2 rounded-lg border shadow-sm"
@@ -90,18 +171,28 @@ export default function ClubDetailPage({
               </div>
             </div>
             
-            <button
-              onClick={() => joinMutation.mutate({ id: club.id })}
-              disabled={joinMutation.isPending}
-              className={cn(
-                "px-8 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto",
-                club.isMember 
-                  ? "bg-muted text-foreground hover:bg-destructive hover:text-white" 
-                  : "bg-primary text-white hover:bg-primary/90 shadow-md"
-              )}
-            >
-              {joinMutation.isPending ? "Loading..." : club.isMember ? "Leave Club" : "Join Club"}
-            </button>
+            {!canManage && (
+              <button
+                onClick={() => joinMutation.mutate({ id: club.id })}
+                disabled={joinMutation.isPending}
+                className={cn(
+                  "px-8 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto",
+                  club.isMember
+                    ? "bg-muted text-foreground hover:bg-destructive hover:text-white"
+                    : "bg-primary text-white hover:bg-primary/90 shadow-md"
+                )}
+              >
+                {joinMutation.isPending ? "Loading..." : club.isMember ? "Leave Club" : "Join Club"}
+              </button>
+            )}
+            {canManage && (
+              <button
+                onClick={() => setIsEditMode((v) => !v)}
+                className="px-8 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto bg-secondary/20 text-secondary hover:bg-secondary hover:text-white"
+              >
+                {isEditMode ? "Cancel Edit" : "Edit Club"}
+              </button>
+            )}
           </div>
 
           <div className="mb-8">
@@ -113,20 +204,30 @@ export default function ClubDetailPage({
                 {club.categoryName}
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{club.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mb-2 break-words">{club.name}</h1>
             <div className="flex items-center gap-2 text-muted-foreground font-semibold bg-muted w-fit px-3 py-1 rounded-md">
               <Users className="w-4 h-4" />
               <span>{club.memberCount} members</span>
             </div>
+            {canManage && (
+              <div className="mt-4">
+                <Link href={`/events/new?clubId=${club.id}`}>
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary/90 cursor-pointer">
+                    <PlusCircle className="w-4 h-4" />
+                    Create Event for {club.name}
+                  </span>
+                </Link>
+              </div>
+            )}
           </div>
 
-          <div className="flex border-b border-border mb-6">
+          <div className="flex border-b border-border mb-6 overflow-x-auto">
             {(["about", "activity", "contact"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
                 className={cn(
-                  "px-6 py-3 font-bold text-sm capitalize transition-all border-b-2",
+                  "px-4 sm:px-6 py-3 font-bold text-sm capitalize transition-all border-b-2 whitespace-nowrap",
                   activeTab === t 
                     ? "border-primary text-primary" 
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
@@ -140,6 +241,42 @@ export default function ClubDetailPage({
           <div className="py-2 min-h-[300px]">
             {activeTab === "about" && (
               <div className="prose max-w-none">
+                {canManage && isEditMode && (
+                  <div className="not-prose mb-6 rounded-xl border bg-muted/30 p-4 space-y-3">
+                    <p className="text-sm font-bold text-foreground">Admin edit mode</p>
+                    <input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                      placeholder="Club name"
+                    />
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm min-h-28"
+                      placeholder="Club description"
+                    />
+                    <input
+                      value={editForm.contactEmail}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                      placeholder="Contact email"
+                    />
+                    <input
+                      value={editForm.coverImageUrl}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
+                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                      placeholder="Cover image URL (optional)"
+                    />
+                    <button
+                      onClick={saveClubChanges}
+                      disabled={isSaving}
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+                    >
+                      {isSaving ? "Saving..." : "Save changes"}
+                    </button>
+                  </div>
+                )}
                 <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">{club.description}</p>
               </div>
             )}

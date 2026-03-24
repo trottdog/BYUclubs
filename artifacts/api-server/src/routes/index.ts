@@ -8,6 +8,7 @@ import eventsRouter from "./events.js";
 import clubsRouter from "./clubs.js";
 import usersRouter from "./users.js";
 import searchRouter from "./search.js";
+import adminRouter from "./admin.js";
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use(eventsRouter);
 router.use(clubsRouter);
 router.use(usersRouter);
 router.use(searchRouter);
+router.use(adminRouter);
 
 export default router;

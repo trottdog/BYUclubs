@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { Map, Users, Search as SearchIcon, Plus, User as UserIcon } from "lucide-react";
+import { useGetClubs, useGetEvents } from "@workspace/api-client-react";
+import { Activity, CalendarDays, Map, Plus, ShieldCheck, User as UserIcon, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Discover", href: "/", icon: Map },
   { name: "My Clubs", href: "/clubs", icon: Users },
-  { name: "Search", href: "/search", icon: SearchIcon },
   { name: "Create Event", href: "/events/new", icon: Plus },
   { name: "Profile", href: "/profile", icon: UserIcon },
 ];
@@ -14,6 +14,17 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { data: events } = useGetEvents();
+  const { data: clubs } = useGetClubs();
+  const totalEvents = events?.length ?? 0;
+  const totalClubs = clubs?.length ?? 0;
+  const isSuperAdmin = Boolean(
+    user?.email &&
+      new Set(["byu_admin@byu.edu", "gunnjake@byu.edu"]).has(user.email.toLowerCase()),
+  );
+  const visibleNavItems = isSuperAdmin
+    ? [...navItems, { name: "Super Admin", href: "/super-admin", icon: ShieldCheck }]
+    : navItems;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -27,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 px-4 mt-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <Link key={item.name} href={item.href}>
@@ -46,6 +57,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <div className="px-4 pb-3">
+          <div className="rounded-xl border border-secondary-foreground/20 bg-secondary-foreground/5 p-4 shadow-sm">
+            <div className="flex items-start gap-2">
+              <Activity className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-secondary-foreground/70">
+                  Campus Snapshot
+                </p>
+                <p className="mt-1 text-xs text-secondary-foreground/80 leading-relaxed">
+                  Live totals to help you see what is happening across BYUconnect right now.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
+                <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  Events
+                </p>
+                <p className="mt-1 text-2xl font-extrabold text-white">{totalEvents}</p>
+              </div>
+              <div className="rounded-lg bg-secondary-foreground/10 p-3 border border-secondary-foreground/10">
+                <p className="text-[11px] text-secondary-foreground/80 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  Clubs
+                </p>
+                <p className="mt-1 text-2xl font-extrabold text-white">{totalClubs}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="p-4 border-t border-secondary-foreground/10">
           {user ? (
@@ -82,7 +125,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 flex items-center justify-around px-2 py-2 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
             <Link key={item.name} href={item.href}>

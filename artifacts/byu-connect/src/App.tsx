@@ -11,10 +11,10 @@ import Discover from "@/pages/discover";
 import EventDetail from "@/pages/event-detail";
 import MyClubs from "@/pages/my-clubs";
 import ClubDetail from "@/pages/club-detail";
-import Search from "@/pages/search";
 import CreateEvent from "@/pages/create-event";
 import Profile from "@/pages/profile";
 import Auth from "@/pages/auth";
+import SuperAdmin from "@/pages/super-admin";
 
 function Router() {
   return (
@@ -50,13 +50,20 @@ function Router() {
         )}
       </Route>
       <Route path="/search">
-        <Layout>
-          <Search />
-        </Layout>
+        {() => {
+          window.history.replaceState(null, "", "/");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+          return null;
+        }}
       </Route>
       <Route path="/profile">
         <Layout>
           <Profile />
+        </Layout>
+      </Route>
+      <Route path="/super-admin">
+        <Layout>
+          <SuperAdmin />
         </Layout>
       </Route>
       <Route>

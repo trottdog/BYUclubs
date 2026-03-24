@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
-import { db, eventsTable, buildingsTable, categoriesTable, clubsTable, eventSavesTable, reservationsTable } from "@workspace/db";
+import { db, eventsTable, buildingsTable, categoriesTable, clubsTable, eventSavesTable, reservationsTable, clubMembershipsTable, usersTable } from "@workspace/db";
 import {
   GetEventsQueryParams,
   GetEventsResponse,
@@ -16,6 +16,62 @@ import {
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router = Router();
+const INDEPENDENT_CLUB_NAME = "Independent Students";
+const DEFAULT_ADMIN_EMAILS = [
+  "byu_admin@byu.edu",
+  "gunnjake@byu.edu",
+];
+
+function getAdminEmailSet(): Set<string> {
+  const configured = process.env.ADMIN_EMAILS?.trim();
+  const source = configured?.length ? configured.split(",") : DEFAULT_ADMIN_EMAILS;
+  return new Set(source.map((email) => email.trim().toLowerCase()).filter(Boolean));
+}
+
+async function getUserEmail(userId: number): Promise<string | null> {
+  const [user] = await db
+    .select({ email: usersTable.email })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  return user?.email?.toLowerCase() ?? null;
+}
+
+async function canManageClub(userId: number, clubId: number): Promise<boolean> {
+  const email = await getUserEmail(userId);
+  if (!email) return false;
+  if (getAdminEmailSet().has(email)) return true;
+
+  try {
+    const roleCheck = await db.execute(sql`
+      select role
+      from club_memberships
+      where user_id = ${userId} and club_id = ${clubId}
+      limit 1
+    `);
+    const role = String(roleCheck.rows?.[0]?.role ?? "").toLowerCase();
+    if (role === "owner" || role === "admin" || role === "club_admin") return true;
+  } catch (err: any) {
+    if (err?.code !== "42703") throw err;
+  }
+
+  // Backward compatibility for schemas without role column.
+  const [membership] = await db
+    .select({ clubId: clubMembershipsTable.clubId })
+    .from(clubMembershipsTable)
+    .where(and(eq(clubMembershipsTable.userId, userId), eq(clubMembershipsTable.clubId, clubId)))
+    .limit(1);
+  return Boolean(membership);
+}
+
+async function getIndependentClubId(): Promise<number | null> {
+  const [club] = await db
+    .select({ id: clubsTable.id })
+    .from(clubsTable)
+    .where(eq(clubsTable.name, INDEPENDENT_CLUB_NAME))
+    .limit(1);
+  return club?.id ?? null;
+}
 
 async function buildEventList(userId: number | null, conditions: any[] = []) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -166,6 +222,14 @@ router.post("/events", async (req, res): Promise<void> => {
     return;
   }
 
+  const independentClubId = await getIndependentClubId();
+  const isIndependentEvent = independentClubId !== null && clubId === independentClubId;
+  const canManage = await canManageClub(userId, clubId);
+  if (!canManage && !isIndependentEvent) {
+    res.status(403).json({ error: "You do not have permission to create events for this club." });
+    return;
+  }
+
   const [event] = await db
     .insert(eventsTable)
     .values({
@@ -185,6 +249,85 @@ router.post("/events", async (req, res): Promise<void> => {
 
   const events = await buildEventList(userId, [eq(eventsTable.id, event.id)]);
   res.status(201).json(events[0]);
+});
+
+router.get("/events/:id/can-manage", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.json({ canManage: false });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
+
+  const [event] = await db
+    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
+    .from(eventsTable)
+    .where(eq(eventsTable.id, id))
+    .limit(1);
+  if (!event) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, event.clubId);
+  res.json({ canManage: allowed });
+});
+
+router.get("/events/:id/attendees", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
+
+  const [event] = await db
+    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
+    .from(eventsTable)
+    .where(eq(eventsTable.id, id))
+    .limit(1);
+  if (!event) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, event.clubId);
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to view attendees for this event." });
+    return;
+  }
+
+  const attendees = await db
+    .select({
+      id: usersTable.id,
+      email: usersTable.email,
+      firstName: usersTable.firstName,
+      lastName: usersTable.lastName,
+      reservedAt: reservationsTable.reservedAt,
+    })
+    .from(reservationsTable)
+    .innerJoin(usersTable, eq(reservationsTable.userId, usersTable.id))
+    .where(eq(reservationsTable.eventId, id))
+    .orderBy(reservationsTable.reservedAt);
+
+  res.json({
+    attendees: attendees.map((a) => ({
+      ...a,
+      reservedAt: a.reservedAt.toISOString(),
+    })),
+  });
 });
 
 router.get("/events/:id", async (req, res): Promise<void> => {
@@ -217,6 +360,161 @@ router.get("/events/:id", async (req, res): Promise<void> => {
   };
 
   res.json(GetEventResponse.parse(detail));
+});
+
+router.patch("/events/:id", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
+
+  const [existingEvent] = await db
+    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
+    .from(eventsTable)
+    .where(eq(eventsTable.id, id))
+    .limit(1);
+  if (!existingEvent) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, existingEvent.clubId);
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to edit this event." });
+    return;
+  }
+
+  const input = req.body ?? {};
+  const updates: Record<string, unknown> = {};
+
+  if (typeof input.title === "string") {
+    const title = input.title.trim();
+    if (!title) {
+      res.status(400).json({ error: "Title cannot be empty." });
+      return;
+    }
+    updates.title = title;
+  }
+  if (typeof input.description === "string") {
+    const description = input.description.trim();
+    if (!description) {
+      res.status(400).json({ error: "Description cannot be empty." });
+      return;
+    }
+    updates.description = description;
+  }
+  if (typeof input.roomNumber === "string") {
+    const roomNumber = input.roomNumber.trim();
+    if (!roomNumber) {
+      res.status(400).json({ error: "Room number cannot be empty." });
+      return;
+    }
+    updates.roomNumber = roomNumber;
+  }
+  if (typeof input.startTime === "string") {
+    const startTime = new Date(input.startTime);
+    if (Number.isNaN(startTime.getTime())) {
+      res.status(400).json({ error: "Invalid startTime." });
+      return;
+    }
+    updates.startTime = startTime;
+  }
+  if (typeof input.endTime === "string") {
+    const endTime = new Date(input.endTime);
+    if (Number.isNaN(endTime.getTime())) {
+      res.status(400).json({ error: "Invalid endTime." });
+      return;
+    }
+    updates.endTime = endTime;
+  }
+  if (typeof input.capacity === "number") {
+    if (!Number.isInteger(input.capacity) || input.capacity < 1) {
+      res.status(400).json({ error: "Capacity must be a positive integer." });
+      return;
+    }
+    updates.capacity = input.capacity;
+  }
+  if (typeof input.hasFood === "boolean") {
+    updates.hasFood = input.hasFood;
+  }
+  if (Array.isArray(input.tags) && input.tags.every((t: any) => typeof t === "string")) {
+    updates.tags = input.tags.map((t: string) => t.trim()).filter(Boolean);
+  }
+  if (typeof input.coverImageUrl === "string") {
+    const coverImageUrl = input.coverImageUrl.trim();
+    updates.coverImageUrl = coverImageUrl.length ? coverImageUrl : null;
+  } else if (input.coverImageUrl === null) {
+    updates.coverImageUrl = null;
+  }
+  if (typeof input.buildingId === "number") {
+    const [building] = await db
+      .select({ id: buildingsTable.id })
+      .from(buildingsTable)
+      .where(eq(buildingsTable.id, input.buildingId))
+      .limit(1);
+    if (!building) {
+      res.status(400).json({ error: "Invalid buildingId." });
+      return;
+    }
+    updates.buildingId = input.buildingId;
+  }
+  if (typeof input.categoryId === "number") {
+    const [category] = await db
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.id, input.categoryId))
+      .limit(1);
+    if (!category) {
+      res.status(400).json({ error: "Invalid categoryId." });
+      return;
+    }
+    updates.categoryId = input.categoryId;
+  }
+  if (typeof input.clubId === "number") {
+    const [club] = await db
+      .select({ id: clubsTable.id })
+      .from(clubsTable)
+      .where(eq(clubsTable.id, input.clubId))
+      .limit(1);
+    if (!club) {
+      res.status(400).json({ error: "Invalid clubId." });
+      return;
+    }
+    const canManageTargetClub = await canManageClub(userId, input.clubId);
+    if (!canManageTargetClub) {
+      res.status(403).json({ error: "You do not have permission to move this event to that club." });
+      return;
+    }
+    updates.clubId = input.clubId;
+  }
+
+  if (updates.startTime && updates.endTime) {
+    if ((updates.startTime as Date).getTime() >= (updates.endTime as Date).getTime()) {
+      res.status(400).json({ error: "End time must be after start time." });
+      return;
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No valid fields provided to update." });
+    return;
+  }
+
+  await db.update(eventsTable).set(updates).where(eq(eventsTable.id, id));
+  const events = await buildEventList(userId, [eq(eventsTable.id, id)]);
+  if (!events.length) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+  res.json(events[0]);
 });
 
 router.post("/events/:id/save", async (req, res): Promise<void> => {

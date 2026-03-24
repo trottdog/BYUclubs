@@ -1,41 +1,188 @@
-import { useState, useMemo } from "react";
-import { useGetEvents, useGetCategories, useGetBuildings } from "@workspace/api-client-react";
+import { useMemo, useState } from "react";
+import { Link } from "wouter";
+import {
+  useGetBuildings,
+  useGetCategories,
+  useGetClubs,
+  useGetEvents,
+} from "@workspace/api-client-react";
 import { EventCard } from "@/components/event-card";
+import { ClubCard } from "@/components/club-card";
 import { MapView } from "@/components/map-view";
-import { Map as MapIcon, List, Filter } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
+import {
+  Building2,
+  CalendarClock,
+  Coffee,
+  Filter,
+  List,
+  Map as MapIcon,
+  Search as SearchIcon,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type TimeFilter = "all" | "now" | "today" | "week" | "upcoming";
+
+const TIME_FILTERS: Array<{ id: TimeFilter; label: string }> = [
+  { id: "all", label: "All time" },
+  { id: "now", label: "Happening now" },
+  { id: "today", label: "Today" },
+  { id: "week", label: "This week" },
+  { id: "upcoming", label: "Upcoming" },
+];
 
 export default function DiscoverPage() {
   const [view, setView] = useState<"list" | "map">("list");
+  const [showMapFilters, setShowMapFilters] = useState(false);
+  const [query, setQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [foodOnly, setFoodOnly] = useState(false);
+  const debouncedQuery = useDebounce(query, 250);
+  const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
-  const { data: events, isLoading: eventsLoading } = useGetEvents({
-    categoryId: selectedCategoryId || undefined,
-  });
-  
+  const { data: events, isLoading: eventsLoading } = useGetEvents();
+  const { data: clubs, isLoading: clubsLoading } = useGetClubs();
   const { data: categories } = useGetCategories();
-  const { data: buildings } = useGetBuildings();
+  const { data: buildings, isLoading: buildingsLoading } = useGetBuildings();
 
-  const sortedEvents = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     if (!events) return [];
     const now = new Date().getTime();
-    
-    // Sort by closest start time, put "happening now" first
-    return [...events].sort((a, b) => {
+
+    const matchesQuery = (event: (typeof events)[number]) => {
+      if (!normalizedQuery) return true;
+      const text = [
+        event.title,
+        event.description,
+        event.buildingName,
+        event.clubName,
+        event.categoryName,
+        event.tags.join(" "),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return text.includes(normalizedQuery);
+    };
+
+    const matchesTime = (event: (typeof events)[number]) => {
+      const start = new Date(event.startTime).getTime();
+      const end = new Date(event.endTime).getTime();
+      const eventDate = new Date(event.startTime);
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(startOfToday);
+      endOfToday.setDate(endOfToday.getDate() + 1);
+      const weekAhead = new Date(startOfToday);
+      weekAhead.setDate(weekAhead.getDate() + 7);
+
+      if (timeFilter === "all") return true;
+      if (timeFilter === "now") return start <= now && now <= end;
+      if (timeFilter === "today") {
+        return eventDate >= startOfToday && eventDate < endOfToday;
+      }
+      if (timeFilter === "week") {
+        return eventDate >= startOfToday && eventDate < weekAhead;
+      }
+      return start >= now;
+    };
+
+    return events
+      .filter((event) => {
+        if (selectedCategoryId && event.categoryId !== selectedCategoryId) return false;
+        if (foodOnly && !event.hasFood) return false;
+        return matchesQuery(event) && matchesTime(event);
+      })
+      .sort((a, b) => {
       const startA = new Date(a.startTime).getTime();
       const endA = new Date(a.endTime).getTime();
       const startB = new Date(b.startTime).getTime();
       const endB = new Date(b.endTime).getTime();
-      
+
       const isNowA = startA <= now && now <= endA;
       const isNowB = startB <= now && now <= endB;
-      
+
       if (isNowA && !isNowB) return -1;
       if (!isNowA && isNowB) return 1;
-      
+
       return startA - startB;
     });
-  }, [events]);
+  }, [events, foodOnly, normalizedQuery, selectedCategoryId, timeFilter]);
+
+  const filteredClubs = useMemo(() => {
+    if (!clubs) return [];
+
+    return clubs.filter((club) => {
+      if (selectedCategoryId && club.categoryId !== selectedCategoryId) return false;
+      if (!normalizedQuery) return true;
+
+      const text = `${club.name} ${club.description} ${club.categoryName}`.toLowerCase();
+      return text.includes(normalizedQuery);
+    });
+  }, [clubs, normalizedQuery, selectedCategoryId]);
+
+  const filteredBuildings = useMemo(() => {
+    if (!buildings) return [];
+    if (!normalizedQuery) return buildings;
+
+    return buildings.filter((building) => {
+      const text = `${building.name} ${building.abbreviation} ${building.address}`.toLowerCase();
+      return text.includes(normalizedQuery);
+    });
+  }, [buildings, normalizedQuery]);
+
+  const isLoading = eventsLoading || clubsLoading || buildingsLoading;
+  const normalizedLiveQuery = query.trim().toLowerCase();
+
+  const suggestions = useMemo(() => {
+    if (!normalizedLiveQuery) return [];
+
+    const eventSuggestions = (events || [])
+      .filter((event) => {
+        const text = `${event.title} ${event.description} ${event.buildingName} ${event.clubName}`.toLowerCase();
+        return text.includes(normalizedLiveQuery);
+      })
+      .slice(0, 4)
+      .map((event) => ({
+        key: `event-${event.id}`,
+        label: event.title,
+        subtitle: `${event.buildingName} • ${event.clubName}`,
+        type: "Event",
+        value: event.title,
+      }));
+
+    const clubSuggestions = (clubs || [])
+      .filter((club) => {
+        const text = `${club.name} ${club.description}`.toLowerCase();
+        return text.includes(normalizedLiveQuery);
+      })
+      .slice(0, 3)
+      .map((club) => ({
+        key: `club-${club.id}`,
+        label: club.name,
+        subtitle: club.categoryName,
+        type: "Club",
+        value: club.name,
+      }));
+
+    const buildingSuggestions = (buildings || [])
+      .filter((building) => {
+        const text = `${building.name} ${building.abbreviation} ${building.address}`.toLowerCase();
+        return text.includes(normalizedLiveQuery);
+      })
+      .slice(0, 3)
+      .map((building) => ({
+        key: `building-${building.id}`,
+        label: building.name,
+        subtitle: `${building.abbreviation} • ${building.address}`,
+        type: "Building",
+        value: building.name,
+      }));
+
+    return [...eventSuggestions, ...clubSuggestions, ...buildingSuggestions].slice(0, 8);
+  }, [buildings, clubs, events, normalizedLiveQuery]);
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -67,63 +214,298 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-        <button
-          onClick={() => setSelectedCategoryId(null)}
-          className={cn(
-            "shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
-            selectedCategoryId === null 
-              ? "bg-primary border-primary text-white" 
-              : "bg-card border-border text-foreground hover:bg-muted"
-          )}
-        >
-          All
-        </button>
-        {categories?.map((cat) => (
+      <div className="relative">
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => {
+            setTimeout(() => setIsSearchFocused(false), 100);
+          }}
+          placeholder="Search events, clubs, or buildings..."
+          className="w-full rounded-xl border bg-card py-3 pl-12 pr-12 text-sm md:text-base outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+        {query && (
           <button
-            key={cat.id}
-            onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
-            className={cn(
-              "shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
-              selectedCategoryId === cat.id 
-                ? "text-white" 
-                : "bg-card border-border text-foreground hover:bg-muted"
-            )}
-            style={{ 
-              backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
-              borderColor: selectedCategoryId === cat.id ? cat.color : undefined
-            }}
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
           >
-            {selectedCategoryId !== cat.id && (
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-            )}
-            {cat.name}
+            <X className="w-4 h-4" />
           </button>
-        ))}
+        )}
+
+        {isSearchFocused && normalizedLiveQuery.length > 0 && (
+          <div className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border bg-card p-2 shadow-lg">
+            {suggestions.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-muted-foreground">No suggestions yet.</div>
+            ) : (
+              suggestions.map((suggestion) => (
+                <button
+                  key={suggestion.key}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setQuery(suggestion.value);
+                    setView("list");
+                    setIsSearchFocused(false);
+                  }}
+                  className="flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-muted"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{suggestion.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">{suggestion.subtitle}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground">
+                    {suggestion.type}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
+      {view !== "map" && (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            {TIME_FILTERS.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => setTimeFilter(preset.id)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                  timeFilter === preset.id
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-card text-foreground hover:bg-muted"
+                )}
+              >
+                <span className="inline-flex items-center gap-1">
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  {preset.label}
+                </span>
+              </button>
+            ))}
+            <button
+              onClick={() => setFoodOnly((v) => !v)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                foodOnly
+                  ? "border-primary bg-primary text-white"
+                  : "border-border bg-card text-foreground hover:bg-muted"
+              )}
+            >
+              <span className="inline-flex items-center gap-1">
+                <Coffee className="w-3.5 h-3.5" />
+                Food provided
+              </span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pb-2">
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
+                selectedCategoryId === null
+                  ? "bg-primary border-primary text-white"
+                  : "bg-card border-border text-foreground hover:bg-muted"
+              )}
+            >
+              All
+            </button>
+            {categories?.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
+                  selectedCategoryId === cat.id
+                    ? "text-white"
+                    : "bg-card border-border text-foreground hover:bg-muted"
+                )}
+                style={{
+                  backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
+                  borderColor: selectedCategoryId === cat.id ? cat.color : undefined
+                }}
+              >
+                {selectedCategoryId !== cat.id && (
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                )}
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="flex-1 min-h-[600px] relative">
-        {eventsLoading ? (
+        {isLoading ? (
           <div className="w-full h-64 flex flex-col items-center justify-center gap-4 text-primary">
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
         ) : view === "map" ? (
           <div className="absolute inset-0 h-[600px] rounded-2xl overflow-hidden shadow-sm border">
-             <MapView events={sortedEvents} buildings={buildings || []} />
+            <MapView events={filteredEvents} buildings={buildings || []} />
+            <div className="absolute top-3 right-3 z-20 w-[min(92vw,380px)]">
+              <button
+                onClick={() => setShowMapFilters((v) => !v)}
+                className="ml-auto flex items-center gap-2 rounded-lg border bg-card/95 px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+                {(timeFilter !== "all" || selectedCategoryId !== null || foodOnly) && (
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Active</span>
+                )}
+              </button>
+
+              {showMapFilters && (
+                <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-xl border bg-card/95 p-3 shadow-lg backdrop-blur">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {TIME_FILTERS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        onClick={() => setTimeFilter(preset.id)}
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                          timeFilter === preset.id
+                            ? "border-primary bg-primary text-white"
+                            : "border-border bg-card text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarClock className="w-3.5 h-3.5" />
+                          {preset.label}
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setFoodOnly((v) => !v)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
+                        foodOnly
+                          ? "border-primary bg-primary text-white"
+                          : "border-border bg-card text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <Coffee className="w-3.5 h-3.5" />
+                        Food provided
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setSelectedCategoryId(null)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
+                        selectedCategoryId === null
+                          ? "bg-primary border-primary text-white"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      )}
+                    >
+                      All
+                    </button>
+                    {categories?.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
+                        className={cn(
+                          "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
+                          selectedCategoryId === cat.id
+                            ? "text-white"
+                            : "bg-card border-border text-foreground hover:bg-muted"
+                        )}
+                        style={{
+                          backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
+                          borderColor: selectedCategoryId === cat.id ? cat.color : undefined
+                        }}
+                      >
+                        {selectedCategoryId !== cat.id && (
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                        )}
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
-            {sortedEvents.length === 0 ? (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center text-muted-foreground bg-card rounded-2xl border border-dashed">
-                <Filter className="w-12 h-12 mb-4 text-border" />
-                <p className="font-semibold text-lg text-foreground">No events found</p>
-                <p className="text-sm">Try adjusting your category filters</p>
+          <div className="flex flex-col gap-10 pb-8">
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-extrabold text-foreground">Events</h2>
+                <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-white">
+                  {filteredEvents.length}
+                </span>
               </div>
-            ) : (
-              sortedEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))
-            )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.length === 0 ? (
+                  <div className="col-span-full py-14 flex flex-col items-center justify-center text-muted-foreground bg-card rounded-2xl border border-dashed">
+                    <Filter className="w-10 h-10 mb-3 text-border" />
+                    <p className="font-semibold text-base text-foreground">No events found</p>
+                    <p className="text-sm">Try adjusting filters or search text.</p>
+                  </div>
+                ) : (
+                  filteredEvents.map((event) => <EventCard key={event.id} event={event} />)
+                )}
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-extrabold text-foreground">Clubs</h2>
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-white">
+                  {filteredClubs.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredClubs.length === 0 ? (
+                  <div className="col-span-full py-10 rounded-2xl border border-dashed bg-card text-center text-sm text-muted-foreground">
+                    No clubs match your current filters.
+                  </div>
+                ) : (
+                  filteredClubs.map((club) => <ClubCard key={club.id} club={club} />)
+                )}
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-extrabold text-foreground">Buildings</h2>
+                <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
+                  {filteredBuildings.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredBuildings.length === 0 ? (
+                  <div className="col-span-full py-10 rounded-2xl border border-dashed bg-card text-center text-sm text-muted-foreground">
+                    No buildings match your search.
+                  </div>
+                ) : (
+                  filteredBuildings.map((building) => (
+                    <div key={building.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <p className="font-bold text-foreground leading-tight">{building.name}</p>
+                        <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-bold">
+                          {building.abbreviation}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{building.address}</p>
+                      <Link href={`/?building=${building.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                        <Building2 className="w-4 h-4" />
+                        View on map
+                      </Link>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
           </div>
         )}
       </div>

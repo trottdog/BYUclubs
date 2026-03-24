@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Link } from "wouter";
+import { useEffect, useMemo, useState } from "react";
 import { useGetClubs, useGetCategories } from "@workspace/api-client-react";
 import { ClubCard } from "@/components/club-card";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,7 @@ import { Users, Filter } from "lucide-react";
 export default function MyClubsPage() {
   const [tab, setTab] = useState<"my" | "discover">("my");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [manageableClubIds, setManageableClubIds] = useState<Set<number>>(new Set());
 
   const { data: clubs, isLoading } = useGetClubs({
     myClubs: tab === "my" ? true : undefined,
@@ -15,8 +17,41 @@ export default function MyClubsPage() {
   
   const { data: categories } = useGetCategories();
 
+  useEffect(() => {
+    if (tab !== "my" || !clubs?.length) {
+      setManageableClubIds(new Set());
+      return;
+    }
+
+    let mounted = true;
+    Promise.all(
+      clubs.map(async (club) => {
+        try {
+          const res = await fetch(`/api/clubs/${club.id}/can-manage`, { credentials: "include" });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data?.canManage ? club.id : null;
+        } catch {
+          return null;
+        }
+      })
+    ).then((ids) => {
+      if (!mounted) return;
+      setManageableClubIds(new Set(ids.filter((id): id is number => typeof id === "number")));
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [clubs, tab]);
+
+  const manageableClubs = useMemo(() => {
+    if (!clubs?.length || tab !== "my") return [];
+    return clubs.filter((club) => manageableClubIds.has(club.id));
+  }, [clubs, manageableClubIds, tab]);
+
   return (
-    <div className="w-full flex flex-col gap-8">
+    <div className="w-full flex flex-col gap-8 overflow-x-hidden">
       <div>
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Clubs</h1>
         <p className="text-muted-foreground mt-1 text-sm md:text-base">Connect with students who share your interests.</p>
@@ -45,8 +80,8 @@ export default function MyClubsPage() {
         </div>
 
         {tab === "discover" && (
-          <select 
-            className="w-full sm:w-auto bg-card border border-border text-foreground text-sm rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 font-bold shadow-sm"
+          <select
+            className="w-full sm:w-auto min-w-0 bg-card border border-border text-foreground text-sm rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 font-bold shadow-sm"
             value={selectedCategoryId || ""}
             onChange={(e) => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null)}
           >
@@ -62,7 +97,8 @@ export default function MyClubsPage() {
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
+          <div className="space-y-6 pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {!clubs || clubs.length === 0 ? (
               <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-card rounded-2xl border border-dashed">
                 {tab === "my" ? (
@@ -90,8 +126,16 @@ export default function MyClubsPage() {
                 )}
               </div>
             ) : (
-              clubs.map((club) => <ClubCard key={club.id} club={club} />)
+              clubs.map((club) => (
+                <ClubCard
+                  key={club.id}
+                  club={club}
+                  canManage={tab === "my" ? manageableClubIds.has(club.id) : false}
+                  statusLabel={tab === "my" ? (manageableClubIds.has(club.id) ? "Admin" : "Member") : undefined}
+                />
+              ))
             )}
+            </div>
           </div>
         )}
       </div>

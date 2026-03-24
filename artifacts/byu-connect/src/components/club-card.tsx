@@ -4,7 +4,15 @@ import { Users } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
-export function ClubCard({ club }: { club: Club }) {
+export function ClubCard({
+  club,
+  statusLabel,
+  canManage = false,
+}: {
+  club: Club;
+  statusLabel?: "Admin" | "Member";
+  canManage?: boolean;
+}) {
   const queryClient = useQueryClient();
   
   const joinMutation = useJoinClub({
@@ -35,6 +43,18 @@ export function ClubCard({ club }: { club: Club }) {
       </div>
 
       <div className="z-10 relative pointer-events-none mb-5 flex-1">
+        {statusLabel && (
+          <span
+            className={cn(
+              "inline-flex mb-2 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
+              statusLabel === "Admin"
+                ? "bg-primary/10 text-primary border border-primary/20"
+                : "bg-muted text-muted-foreground border border-border"
+            )}
+          >
+            {statusLabel}
+          </span>
+        )}
         <h3 className="text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors line-clamp-1">{club.name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{club.description}</p>
       </div>
@@ -44,18 +64,22 @@ export function ClubCard({ club }: { club: Club }) {
           <Users className="w-4 h-4 text-muted-foreground" />
           <span>{club.memberCount} <span className="text-muted-foreground font-normal">members</span></span>
         </div>
-        <button
-          onClick={(e) => { e.preventDefault(); joinMutation.mutate({ id: club.id }); }}
-          disabled={joinMutation.isPending}
-          className={cn(
-            "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 pointer-events-auto",
-            club.isMember 
-              ? "bg-muted text-foreground hover:bg-destructive/10 hover:text-destructive" 
-              : "bg-primary text-white shadow-sm hover:shadow-md hover:bg-primary/90"
-          )}
-        >
-          {joinMutation.isPending ? "..." : club.isMember ? "Leave" : "Join"}
-        </button>
+        {canManage ? (
+          <span className="text-xs font-bold text-primary">Admin managed</span>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); joinMutation.mutate({ id: club.id }); }}
+            disabled={joinMutation.isPending}
+            className={cn(
+              "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 pointer-events-auto",
+              club.isMember 
+                ? "bg-muted text-foreground hover:bg-destructive/10 hover:text-destructive" 
+                : "bg-primary text-white shadow-sm hover:shadow-md hover:bg-primary/90"
+            )}
+          >
+            {joinMutation.isPending ? "..." : club.isMember ? "Leave" : "Join"}
+          </button>
+        )}
       </div>
     </div>
   );

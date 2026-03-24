@@ -35,7 +35,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-12">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
       <div>
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Profile</h1>
         <p className="text-muted-foreground mt-1 font-medium text-sm md:text-base">Manage your account and events.</p>
