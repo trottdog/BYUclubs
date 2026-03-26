@@ -40,7 +40,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
   }, [activeBuildings, selectedBuildingId]);
 
   return (
-    <div className="grid h-full min-h-0 w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+    <div className="grid h-full min-h-0 w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
       <div className="relative h-[360px] min-h-0 border-b border-border bg-muted lg:h-full lg:border-b-0 lg:border-r">
         {filterOverlay ? (
           <div className="absolute top-3 right-20 z-10 max-w-[calc(100%-6rem)]">

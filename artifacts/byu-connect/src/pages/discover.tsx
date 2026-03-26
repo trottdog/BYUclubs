@@ -247,8 +247,8 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm shrink-0">
+      <div className="flex flex-wrap items-center gap-2 pb-1 sm:flex-nowrap">
+        <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm">
           <button
             onClick={() => setView("list")}
             className={cn(
@@ -273,7 +273,7 @@ export default function DiscoverPage() {
           value={timeFilter}
           onValueChange={(v) => setTimeFilter(v as TimeFilter)}
         >
-          <SelectTrigger className="h-9 w-[140px] shrink-0 rounded-lg border bg-card px-2.5 text-xs font-semibold sm:text-sm">
+          <SelectTrigger className="h-9 w-[128px] rounded-lg border bg-card px-2.5 text-xs font-semibold sm:w-[150px] sm:text-sm">
             <span className="flex min-w-0 items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <SelectValue />
@@ -298,7 +298,7 @@ export default function DiscoverPage() {
             }
           }}
         >
-          <SelectTrigger className="h-9 w-[150px] shrink-0 rounded-lg border bg-card px-2.5 text-xs font-semibold sm:text-sm">
+          <SelectTrigger className="h-9 w-[138px] rounded-lg border bg-card px-2.5 text-xs font-semibold sm:w-[170px] sm:text-sm">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
@@ -317,7 +317,7 @@ export default function DiscoverPage() {
           type="button"
           onClick={() => setFoodOnly((v) => !v)}
           className={cn(
-            "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-all sm:text-sm",
+            "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-all sm:text-sm",
             foodOnly
               ? "border-primary bg-primary text-white"
               : "border-border bg-card text-foreground hover:bg-muted"
