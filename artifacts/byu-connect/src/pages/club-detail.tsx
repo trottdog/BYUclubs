@@ -1,6 +1,6 @@
-import { Link, useParams, useLocation } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useGetClub, useJoinClub } from "@workspace/api-client-react";
-import { ArrowLeft, Users, Mail, Bell, Calendar as CalendarIcon, PlusCircle } from "lucide-react";
+import { ArrowLeft, Bell, Calendar as CalendarIcon, Mail, PlusCircle, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,7 +25,6 @@ export default function ClubDetailPage({
     : !Number.isNaN(clubIdFromParams)
       ? clubIdFromParams
       : Number(clubIdFromPathMatch?.[1]);
-  const [activeTab, setActiveTab] = useState<"about" | "activity" | "contact">("about");
   const [canManage, setCanManage] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,7 +38,7 @@ export default function ClubDetailPage({
   const { toast } = useToast();
 
   const { data: club, isLoading, error } = useGetClub(clubId, {
-    query: { enabled: !isNaN(clubId), queryKey: ["/api/clubs", clubId] }
+    query: { enabled: !isNaN(clubId), queryKey: ["/api/clubs", clubId] },
   });
 
   const joinMutation = useJoinClub({
@@ -47,8 +46,8 @@ export default function ClubDetailPage({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/clubs", clubId] });
         queryClient.invalidateQueries({ queryKey: ["/api/clubs"] });
-      }
-    }
+      },
+    },
   });
 
   useEffect(() => {
@@ -133,213 +132,247 @@ export default function ClubDetailPage({
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold mb-2">Club not found</h2>
-        <button onClick={() => setLocation("/clubs")} className="text-primary hover:underline font-medium">Back to clubs</button>
+        <button onClick={() => setLocation("/clubs")} className="text-primary hover:underline font-medium">
+          Back to clubs
+        </button>
       </div>
     );
   }
 
-  return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
-      <button 
-        onClick={() => history.back()} 
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold transition-colors w-fit bg-card px-4 py-2 rounded-lg border shadow-sm"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back
-      </button>
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
 
-      <div className="bg-card rounded-2xl border shadow-sm overflow-hidden relative">
-        <div className="h-40 md:h-56 w-full relative bg-muted">
-          <div className="absolute inset-0" style={{ backgroundColor: club.avatarColor, opacity: club.coverImageUrl ? 0 : 0.4 }} />
+    setLocation("/clubs");
+  };
+
+  const profileStats = [
+    { label: "members", value: club.memberCount ?? 0 },
+    { label: "events", value: club.upcomingEvents?.length ?? 0 },
+    { label: "posts", value: club.announcements?.length ?? 0 },
+  ];
+
+  return (
+    <div className="w-full max-w-4xl mx-auto pb-24 md:pb-12 overflow-x-hidden">
+      <div className="bg-card rounded-[2rem] border shadow-sm overflow-hidden relative">
+        <div className="h-28 sm:h-36 md:h-56 w-full relative bg-muted">
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: club.avatarColor, opacity: club.coverImageUrl ? 0 : 0.4 }}
+          />
           {club.coverImageUrl && (
-            <img 
+            <img
               src={club.coverImageUrl}
               alt={`${club.name} cover`}
               className="w-full h-full object-cover"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-4 sm:px-6">
+            <button
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-2 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-black/60"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
+            <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md">
+              {club.categoryName}
+            </span>
+          </div>
         </div>
 
-        <div className="px-6 md:px-10 pb-8 relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-16 md:-mt-20 mb-6">
-            <div className="flex items-end gap-5">
-              <div 
-                className="w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center text-4xl md:text-5xl font-extrabold text-white border-4 border-card shadow-md shrink-0"
-                style={{ backgroundColor: club.avatarColor }}
-              >
-                {club.avatarInitials}
+        <div className="px-4 sm:px-6 md:px-10 pb-8 relative">
+          <div className="flex flex-col gap-6 -mt-10 sm:-mt-14 md:-mt-[4.5rem]">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-start gap-4 sm:gap-6">
+                <div
+                  className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-extrabold text-white border-4 border-card shadow-md shrink-0"
+                  style={{ backgroundColor: club.avatarColor }}
+                >
+                  {club.avatarInitials}
+                </div>
+
+                <div className="flex-1 min-w-0 pt-4 sm:pt-6">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                    {profileStats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="rounded-2xl border border-border/80 bg-muted/45 px-3 py-3 text-center"
+                      >
+                        <p className="text-base sm:text-xl font-extrabold text-foreground">{stat.value}</p>
+                        <p className="mt-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {stat.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            {!canManage && (
-              <button
-                onClick={() => joinMutation.mutate({ id: club.id })}
-                disabled={joinMutation.isPending}
-                className={cn(
-                  "px-8 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto",
-                  club.isMember
-                    ? "bg-muted text-foreground hover:bg-destructive hover:text-white"
-                    : "bg-primary text-white hover:bg-primary/90 shadow-md"
-                )}
-              >
-                {joinMutation.isPending ? "Loading..." : club.isMember ? "Leave Club" : "Join Club"}
-              </button>
-            )}
-            {canManage && (
-              <button
-                onClick={() => setIsEditMode((v) => !v)}
-                className="px-8 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto bg-secondary/20 text-secondary hover:bg-secondary hover:text-white"
-              >
-                {isEditMode ? "Cancel Edit" : "Edit Club"}
-              </button>
-            )}
-          </div>
 
-          <div className="mb-8">
-            <div className="mb-3">
-              <span 
-                className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border border-border" 
-                style={{ color: club.categoryColor, backgroundColor: `${club.categoryColor}15` }}
-              >
-                {club.categoryName}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mb-2 break-words">{club.name}</h1>
-            <div className="flex items-center gap-2 text-muted-foreground font-semibold bg-muted w-fit px-3 py-1 rounded-md">
-              <Users className="w-4 h-4" />
-              <span>{club.memberCount} members</span>
-            </div>
-            {canManage && (
-              <div className="mt-4">
-                <Link href={`/events/new?clubId=${club.id}`}>
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary/90 cursor-pointer">
-                    <PlusCircle className="w-4 h-4" />
-                    Create Event for {club.name}
-                  </span>
-                </Link>
-              </div>
-            )}
-          </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+                    <Users className="w-4 h-4" />
+                    <span>{club.memberCount} members</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight break-words">
+                    {club.name}
+                  </h1>
+                </div>
 
-          <div className="flex border-b border-border mb-6 overflow-x-auto">
-            {(["about", "activity", "contact"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={cn(
-                  "px-4 sm:px-6 py-3 font-bold text-sm capitalize transition-all border-b-2 whitespace-nowrap",
-                  activeTab === t 
-                    ? "border-primary text-primary" 
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div className="py-2 min-h-[300px]">
-            {activeTab === "about" && (
-              <div className="prose max-w-none">
-                {canManage && isEditMode && (
-                  <div className="not-prose mb-6 rounded-xl border bg-muted/30 p-4 space-y-3">
-                    <p className="text-sm font-bold text-foreground">Admin edit mode</p>
-                    <input
-                      value={editForm.name}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
-                      placeholder="Club name"
-                    />
-                    <textarea
-                      value={editForm.description}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
-                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm min-h-28"
-                      placeholder="Club description"
-                    />
-                    <input
-                      value={editForm.contactEmail}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, contactEmail: e.target.value }))}
-                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
-                      placeholder="Contact email"
-                    />
-                    <input
-                      value={editForm.coverImageUrl}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
-                      className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
-                      placeholder="Cover image URL (optional)"
-                    />
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                  {!canManage && (
                     <button
-                      onClick={saveClubChanges}
-                      disabled={isSaving}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+                      onClick={() => joinMutation.mutate({ id: club.id })}
+                      disabled={joinMutation.isPending}
+                      className={cn(
+                        "px-5 py-3 rounded-xl font-bold transition-all shadow-sm w-full sm:w-auto",
+                        club.isMember
+                          ? "bg-muted text-foreground hover:bg-destructive hover:text-white"
+                          : "bg-primary text-white hover:bg-primary/90 shadow-md"
+                      )}
                     >
-                      {isSaving ? "Saving..." : "Save changes"}
+                      {joinMutation.isPending ? "Loading..." : club.isMember ? "Leave Club" : "Join Club"}
                     </button>
-                  </div>
-                )}
-                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">{club.description}</p>
-              </div>
-            )}
+                  )}
+                  {canManage && (
+                    <button
+                      onClick={() => setIsEditMode((v) => !v)}
+                      className="px-5 py-3 rounded-xl font-bold transition-all shadow-sm w-full sm:w-auto bg-secondary/20 text-secondary hover:bg-secondary hover:text-white"
+                    >
+                      {isEditMode ? "Cancel Edit" : "Edit Club"}
+                    </button>
+                  )}
+                  {canManage && (
+                    <Link href={`/events/new?clubId=${club.id}`}>
+                      <span className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-primary/15 bg-primary/10 px-5 py-3 text-sm font-bold text-primary hover:bg-primary/15 cursor-pointer">
+                        <PlusCircle className="w-4 h-4" />
+                        Create Event
+                      </span>
+                    </Link>
+                  )}
+                </div>
 
-            {activeTab === "contact" && (
-              <div className="flex flex-col gap-4 max-w-md">
-                <div className="flex items-center gap-4 p-5 rounded-xl bg-card border shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                    <Mail className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Primary Email</p>
-                    <a href={`mailto:${club.contactEmail}`} className="text-lg font-bold text-foreground hover:text-primary transition-colors">{club.contactEmail}</a>
-                  </div>
+                <div className="flex flex-wrap gap-3 border-y border-border/80 py-4">
+                  {club.contactEmail ? (
+                    <a
+                      href={`mailto:${club.contactEmail}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted/45 px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30 hover:text-primary"
+                    >
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      {club.contactEmail}
+                    </a>
+                  ) : (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-dashed border-border px-4 py-2 text-sm text-muted-foreground">
+                      <Mail className="w-4 h-4" />
+                      Contact info coming soon
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+
+            {canManage && isEditMode && (
+              <div className="rounded-2xl border bg-muted/30 p-4 sm:p-5 space-y-3">
+                <p className="text-sm font-bold text-foreground">Admin edit mode</p>
+                <input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                  placeholder="Club name"
+                />
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full rounded-lg border bg-card px-3 py-2 text-sm min-h-28"
+                  placeholder="Club description"
+                />
+                <input
+                  value={editForm.contactEmail}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                  className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                  placeholder="Contact email"
+                />
+                <input
+                  value={editForm.coverImageUrl}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
+                  className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
+                  placeholder="Cover image URL (optional)"
+                />
+                <button
+                  onClick={saveClubChanges}
+                  disabled={isSaving}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+                >
+                  {isSaving ? "Saving..." : "Save changes"}
+                </button>
+              </div>
             )}
 
-            {activeTab === "activity" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Upcoming Events */}
+            <section className="space-y-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">About</p>
+                <h2 className="mt-2 text-xl font-extrabold text-foreground">Club overview</h2>
+              </div>
+              <div className="rounded-2xl bg-muted/30 px-4 py-5 sm:px-5">
+                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+                  {club.description || "This club has not added an about section yet."}
+                </p>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-extrabold flex items-center gap-2 mb-4 text-foreground">
-                    <CalendarIcon className="w-5 h-5 text-primary" /> Upcoming Events
-                  </h3>
-                  <div className="space-y-4">
-                    {!club.upcomingEvents?.length ? (
-                      <div className="bg-muted/50 border border-dashed rounded-xl p-6 text-center">
-                        <p className="text-muted-foreground text-sm font-medium">No upcoming events scheduled.</p>
-                      </div>
-                    ) : (
-                      club.upcomingEvents.map(ev => <EventCard key={ev.id} event={ev} compact />)
-                    )}
-                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Events</p>
+                  <h2 className="mt-2 text-xl font-extrabold text-foreground">Upcoming events</h2>
                 </div>
-
-                {/* Announcements */}
-                <div>
-                  <h3 className="text-lg font-extrabold flex items-center gap-2 mb-4 text-foreground">
-                    <Bell className="w-5 h-5 text-amber-500" /> Announcements
-                  </h3>
-                  <div className="space-y-4">
-                    {!club.announcements?.length ? (
-                      <div className="bg-muted/50 border border-dashed rounded-xl p-6 text-center">
-                        <p className="text-muted-foreground text-sm font-medium">No recent announcements.</p>
-                      </div>
-                    ) : (
-                      club.announcements.map(ann => (
-                        <div key={ann.id} className="bg-card border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-2 gap-4">
-                            <h4 className="font-bold text-foreground text-lg leading-tight">{ann.title}</h4>
-                            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0">
-                              {format(new Date(ann.createdAt), "MMM d")}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ann.body}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                <CalendarIcon className="w-5 h-5 text-primary" />
               </div>
-            )}
+              {!club.upcomingEvents?.length ? (
+                <div className="bg-muted/50 border border-dashed rounded-2xl p-6 text-center">
+                  <p className="text-muted-foreground text-sm font-medium">No upcoming events scheduled.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {club.upcomingEvents.map((ev) => (
+                    <EventCard key={ev.id} event={ev} compact />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Updates</p>
+                  <h2 className="mt-2 text-xl font-extrabold text-foreground">Announcements</h2>
+                </div>
+                <Bell className="w-5 h-5 text-amber-500" />
+              </div>
+              {!club.announcements?.length ? (
+                <div className="bg-muted/50 border border-dashed rounded-2xl p-6 text-center">
+                  <p className="text-muted-foreground text-sm font-medium">No recent announcements.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {club.announcements.map((ann) => (
+                    <div key={ann.id} className="rounded-2xl border bg-card p-5 shadow-sm">
+                      <div className="flex justify-between items-start mb-2 gap-4">
+                        <h3 className="font-bold text-foreground text-base sm:text-lg leading-tight">{ann.title}</h3>
+                        <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0">
+                          {format(new Date(ann.createdAt), "MMM d")}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ann.body}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         </div>
       </div>
