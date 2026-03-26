@@ -193,12 +193,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Discover</h1>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">Find what's happening on campus today.</p>
-        </div>
-        
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4">
         <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm self-start sm:self-auto">
           <button
             onClick={() => setView("list")}

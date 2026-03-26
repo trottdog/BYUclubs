@@ -55,11 +55,6 @@ export default function MyClubsPage() {
 
   return (
     <div className="w-full flex flex-col gap-8 overflow-x-hidden">
-      <div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Clubs</h1>
-        <p className="text-muted-foreground mt-1 text-sm md:text-base">Connect with students who share your interests.</p>
-      </div>
-
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex bg-card p-1 rounded-lg border shadow-sm w-full sm:w-auto">
           <button
