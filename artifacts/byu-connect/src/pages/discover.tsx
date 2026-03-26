@@ -31,7 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useQueries } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 type TimeFilter = "all" | "now" | "today" | "week" | "upcoming";
 
