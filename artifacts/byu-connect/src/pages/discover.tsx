@@ -213,13 +213,10 @@ export default function DiscoverPage() {
   const joinedClubAnnouncements = useMemo(() => {
     const items: Array<{
       clubId: number;
-      clubName: string;
       avatarInitials: string;
       avatarColor: string;
       categoryColor: string;
       announcementId: number;
-      announcementTitle: string;
-      announcementBody: string;
       createdAt: string;
     }> = [];
 
@@ -239,13 +236,10 @@ export default function DiscoverPage() {
 
       items.push({
         clubId: club.id,
-        clubName: club.name,
         avatarInitials: club.avatarInitials,
         avatarColor: club.avatarColor,
         categoryColor: club.categoryColor,
         announcementId: latestAnnouncement.id,
-        announcementTitle: latestAnnouncement.title,
-        announcementBody: latestAnnouncement.body,
         createdAt: latestAnnouncement.createdAt,
       });
     });
@@ -264,7 +258,7 @@ export default function DiscoverPage() {
     Number(foodOnly);
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full min-w-0 max-w-full flex flex-col gap-6 overflow-x-hidden">
       <div className="relative">
         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
@@ -319,7 +313,7 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex items-center rounded-full border bg-card p-1 shadow-sm">
           <button
             onClick={() => setView("list")}
@@ -518,66 +512,33 @@ export default function DiscoverPage() {
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-8 pb-8">
+          <div className="flex min-w-0 flex-col gap-8 pb-8">
             {(joinedAnnouncementsLoading || joinedClubAnnouncements.length > 0) && (
-              <section className="space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-                    Club updates
-                  </p>
-                  <Link href="/clubs">
-                    <span className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground">
-                      My clubs
-                    </span>
-                  </Link>
-                </div>
-
-                <div className="flex gap-3 overflow-x-auto pb-2">
+              <section>
+                <div className="flex gap-3 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {joinedAnnouncementsLoading
                     ? Array.from({ length: 4 }).map((_, index) => (
                         <div
                           key={index}
-                          className="w-[150px] shrink-0 rounded-[1.75rem] border bg-card p-3 shadow-sm"
+                          className="h-16 w-16 shrink-0 animate-pulse rounded-full bg-muted"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="h-14 w-14 animate-pulse rounded-full bg-muted" />
-                            <div className="min-w-0 flex-1 space-y-2">
-                              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-                              <div className="h-2.5 w-12 animate-pulse rounded bg-muted" />
-                            </div>
-                          </div>
-                          <div className="mt-3 h-3 w-24 animate-pulse rounded bg-muted" />
-                          <div className="mt-2 h-10 animate-pulse rounded-2xl bg-muted" />
-                        </div>
+                        />
                       ))
                     : joinedClubAnnouncements.map((item) => (
                         <Link key={item.announcementId} href={`/clubs/${item.clubId}`}>
-                          <span className="group flex w-[150px] shrink-0 cursor-pointer flex-col gap-3 rounded-[1.75rem] border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-card text-lg font-extrabold text-white shadow-sm"
-                                style={{
-                                  backgroundColor: item.avatarColor,
-                                  boxShadow: `0 0 0 3px ${item.categoryColor}55`,
-                                }}
-                              >
-                                {item.avatarInitials}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-foreground">{item.clubName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl bg-muted/40 px-3 py-2.5">
-                              <p className="line-clamp-2 text-sm font-semibold text-foreground">
-                                {item.announcementTitle}
-                              </p>
-                              <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                                {item.announcementBody}
-                              </p>
-                            </div>
+                          <span
+                            className="relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg font-extrabold text-white transition hover:scale-[1.03]"
+                            title={formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                            style={{
+                              background: `linear-gradient(135deg, ${item.categoryColor}, ${item.avatarColor})`,
+                            }}
+                          >
+                            <span
+                              className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-2 border-card shadow-sm"
+                              style={{ backgroundColor: item.avatarColor }}
+                            >
+                              {item.avatarInitials}
+                            </span>
                           </span>
                         </Link>
                       ))}

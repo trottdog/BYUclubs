@@ -1,6 +1,6 @@
 import { Link, useLocation, useParams } from "wouter";
 import { useGetClub, useJoinClub } from "@workspace/api-client-react";
-import { ArrowLeft, Bell, Calendar as CalendarIcon, Mail, PlusCircle, Users } from "lucide-react";
+import { ArrowLeft, Mail, PlusCircle, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -147,13 +147,6 @@ export default function ClubDetailPage({
 
     setLocation("/clubs");
   };
-
-  const profileStats = [
-    { label: "members", value: club.memberCount ?? 0 },
-    { label: "events", value: club.upcomingEvents?.length ?? 0 },
-    { label: "posts", value: club.announcements?.length ?? 0 },
-  ];
-
   return (
     <div className="w-full max-w-4xl mx-auto pb-24 md:pb-12 overflow-x-hidden">
       <div className="bg-card rounded-[2rem] border shadow-sm overflow-hidden relative">
@@ -193,22 +186,6 @@ export default function ClubDetailPage({
                   style={{ backgroundColor: club.avatarColor }}
                 >
                   {club.avatarInitials}
-                </div>
-
-                <div className="flex-1 min-w-0 pt-4 sm:pt-6">
-                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                    {profileStats.map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="rounded-2xl border border-border/80 bg-muted/45 px-3 py-3 text-center"
-                      >
-                        <p className="text-base sm:text-xl font-extrabold text-foreground">{stat.value}</p>
-                        <p className="mt-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {stat.label}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
 
@@ -313,10 +290,6 @@ export default function ClubDetailPage({
             )}
 
             <section className="space-y-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">About</p>
-                <h2 className="mt-2 text-xl font-extrabold text-foreground">Club overview</h2>
-              </div>
               <div className="rounded-2xl bg-muted/30 px-4 py-5 sm:px-5">
                 <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
                   {club.description || "This club has not added an about section yet."}
@@ -324,40 +297,8 @@ export default function ClubDetailPage({
               </div>
             </section>
 
-            <section className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Events</p>
-                  <h2 className="mt-2 text-xl font-extrabold text-foreground">Upcoming events</h2>
-                </div>
-                <CalendarIcon className="w-5 h-5 text-primary" />
-              </div>
-              {!club.upcomingEvents?.length ? (
-                <div className="bg-muted/50 border border-dashed rounded-2xl p-6 text-center">
-                  <p className="text-muted-foreground text-sm font-medium">No upcoming events scheduled.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {club.upcomingEvents.map((ev) => (
-                    <EventCard key={ev.id} event={ev} compact />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Updates</p>
-                  <h2 className="mt-2 text-xl font-extrabold text-foreground">Announcements</h2>
-                </div>
-                <Bell className="w-5 h-5 text-amber-500" />
-              </div>
-              {!club.announcements?.length ? (
-                <div className="bg-muted/50 border border-dashed rounded-2xl p-6 text-center">
-                  <p className="text-muted-foreground text-sm font-medium">No recent announcements.</p>
-                </div>
-              ) : (
+            {!!club.announcements?.length && (
+              <section className="space-y-4">
                 <div className="space-y-3">
                   {club.announcements.map((ann) => (
                     <div key={ann.id} className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -369,6 +310,20 @@ export default function ClubDetailPage({
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ann.body}</p>
                     </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="space-y-4">
+              {!club.upcomingEvents?.length ? (
+                <div className="bg-muted/50 border border-dashed rounded-2xl p-6 text-center">
+                  <p className="text-muted-foreground text-sm font-medium">No upcoming events scheduled.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {club.upcomingEvents.map((ev) => (
+                    <EventCard key={ev.id} event={ev} compact />
                   ))}
                 </div>
               )}
