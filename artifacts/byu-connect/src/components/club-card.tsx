@@ -1,86 +1,55 @@
 import { Link } from "wouter";
-import { Club, useJoinClub } from "@workspace/api-client-react";
-import { Users } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { Club } from "@workspace/api-client-react";
+import { CalendarClock, Users } from "lucide-react";
 
 export function ClubCard({
   club,
-  statusLabel,
-  canManage = false,
+  tags = [],
+  lastEventText = "No events yet",
 }: {
   club: Club;
-  statusLabel?: "Admin" | "Member";
-  canManage?: boolean;
+  tags?: string[];
+  lastEventText?: string;
 }) {
-  const queryClient = useQueryClient();
-  
-  const joinMutation = useJoinClub({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/clubs"] });
-      }
-    }
-  });
-
   return (
-    <div className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden transition-all duration-300 hover:shadow-hover hover:border-primary/20 p-6 relative">
-      <Link href={`/clubs/${club.id}`} className="absolute inset-0 z-0" />
-      
-      <div className="flex items-start justify-between mb-5 z-10 relative pointer-events-none">
-        <div 
-          className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-sm border-2 border-white"
-          style={{ backgroundColor: club.avatarColor, color: '#ffffff' }}
-        >
-          {club.avatarInitials}
-        </div>
-        <span 
-          className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white shadow-sm border border-border/50"
-          style={{ color: club.categoryColor }}
-        >
-          {club.categoryName}
-        </span>
-      </div>
-
-      <div className="z-10 relative pointer-events-none mb-5 flex-1">
-        {statusLabel && (
-          <span
-            className={cn(
-              "inline-flex mb-2 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
-              statusLabel === "Admin"
-                ? "bg-primary/10 text-primary border border-primary/20"
-                : "bg-muted text-muted-foreground border border-border"
-            )}
+    <Link href={`/clubs/${club.id}`}>
+      <span className="group flex cursor-pointer flex-col gap-4 rounded-[1.75rem] border border-border bg-card p-5 transition-all duration-300 hover:border-primary/20 hover:shadow-hover">
+        <div className="flex items-center gap-4">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-extrabold text-white shadow-sm"
+            style={{ backgroundColor: club.avatarColor }}
           >
-            {statusLabel}
+            {club.avatarInitials}
+          </div>
+          <div className="min-w-0">
+            <h3 className="line-clamp-2 text-base font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+              {club.name}
+            </h3>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-border/70 bg-muted/45 px-3 py-1 text-[11px] font-semibold text-muted-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            <span>{club.memberCount}</span>
           </span>
-        )}
-        <h3 className="text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors line-clamp-1">{club.name}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{club.description}</p>
-      </div>
-
-      <div className="flex items-center justify-between pt-4 border-t border-border/50 z-10 relative">
-        <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-          <Users className="w-4 h-4 text-muted-foreground" />
-          <span>{club.memberCount} <span className="text-muted-foreground font-normal">members</span></span>
+          <span className="inline-flex items-center gap-1.5 truncate">
+            <CalendarClock className="h-4 w-4 shrink-0" />
+            <span className="truncate">{lastEventText}</span>
+          </span>
         </div>
-        {canManage ? (
-          <span className="text-xs font-bold text-primary">Admin managed</span>
-        ) : (
-          <button
-            onClick={(e) => { e.preventDefault(); joinMutation.mutate({ id: club.id }); }}
-            disabled={joinMutation.isPending}
-            className={cn(
-              "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 pointer-events-auto",
-              club.isMember 
-                ? "bg-muted text-foreground hover:bg-destructive/10 hover:text-destructive" 
-                : "bg-primary text-white shadow-sm hover:shadow-md hover:bg-primary/90"
-            )}
-          >
-            {joinMutation.isPending ? "..." : club.isMember ? "Leave" : "Join"}
-          </button>
-        )}
-      </div>
-    </div>
+      </span>
+    </Link>
   );
 }
