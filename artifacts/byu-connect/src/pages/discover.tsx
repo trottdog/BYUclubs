@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
+  getGetClubQueryOptions,
   useGetBuildings,
   useGetCategories,
   useGetClubs,
@@ -28,6 +29,9 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQueries } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
 
 type TimeFilter = "all" | "now" | "today" | "week" | "upcoming";
 
@@ -40,6 +44,7 @@ const TIME_FILTERS: Array<{ id: TimeFilter; label: string }> = [
 ];
 
 export default function DiscoverPage() {
+  const { user } = useAuth();
   const [view, setView] = useState<"list" | "map">("list");
   const [showMapFilters, setShowMapFilters] = useState(false);
   const [query, setQuery] = useState("");
@@ -52,8 +57,22 @@ export default function DiscoverPage() {
 
   const { data: events, isLoading: eventsLoading } = useGetEvents();
   const { data: clubs, isLoading: clubsLoading } = useGetClubs();
+  const { data: joinedClubs, isLoading: joinedClubsLoading } = useGetClubs(
+    user ? { myClubs: true } : undefined,
+    { query: { enabled: !!user, queryKey: ["/api/clubs", "joined-feed", user?.id ?? null] } },
+  );
   const { data: categories } = useGetCategories();
   const { data: buildings, isLoading: buildingsLoading } = useGetBuildings();
+  const joinedClubDetailQueries = useQueries({
+    queries: (joinedClubs ?? []).map((club) =>
+      getGetClubQueryOptions(club.id, {
+        query: {
+          enabled: !!user,
+          staleTime: 60_000,
+        },
+      }),
+    ),
+  });
 
   const filteredEvents = useMemo(() => {
     if (!events) return [];
@@ -191,6 +210,59 @@ export default function DiscoverPage() {
     return [...eventSuggestions, ...clubSuggestions, ...buildingSuggestions].slice(0, 8);
   }, [buildings, clubs, events, normalizedLiveQuery]);
 
+  const joinedClubAnnouncements = useMemo(() => {
+    const items: Array<{
+      clubId: number;
+      clubName: string;
+      avatarInitials: string;
+      avatarColor: string;
+      categoryColor: string;
+      announcementId: number;
+      announcementTitle: string;
+      announcementBody: string;
+      createdAt: string;
+    }> = [];
+
+    if (!user || !joinedClubs?.length) return items;
+
+    joinedClubs.forEach((club, index) => {
+      const detail = joinedClubDetailQueries[index]?.data;
+      const latestAnnouncement = [...(detail?.announcements ?? [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0];
+
+      if (!latestAnnouncement) return;
+      if (selectedCategoryId && club.categoryId !== selectedCategoryId) return;
+
+      const text = `${club.name} ${club.description} ${club.categoryName} ${latestAnnouncement.title} ${latestAnnouncement.body}`.toLowerCase();
+      if (normalizedQuery && !text.includes(normalizedQuery)) return;
+
+      items.push({
+        clubId: club.id,
+        clubName: club.name,
+        avatarInitials: club.avatarInitials,
+        avatarColor: club.avatarColor,
+        categoryColor: club.categoryColor,
+        announcementId: latestAnnouncement.id,
+        announcementTitle: latestAnnouncement.title,
+        announcementBody: latestAnnouncement.body,
+        createdAt: latestAnnouncement.createdAt,
+      });
+    });
+
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [joinedClubDetailQueries, joinedClubs, normalizedQuery, selectedCategoryId, user]);
+
+  const joinedAnnouncementsLoading =
+    !!user &&
+    (joinedClubsLoading ||
+      (!!joinedClubs?.length && joinedClubDetailQueries.some((query) => query.isLoading)));
+
+  const activeFilterCount =
+    Number(timeFilter !== "all") +
+    Number(selectedCategoryId !== null) +
+    Number(foodOnly);
+
   return (
     <div className="w-full flex flex-col gap-6">
       <div className="relative">
@@ -247,25 +319,27 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pb-1 sm:flex-nowrap">
-        <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center rounded-full border bg-card p-1 shadow-sm">
           <button
             onClick={() => setView("list")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all sm:text-sm",
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
               view === "list" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <List className="w-3.5 h-3.5" /> List
+            <List className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Feed</span>
           </button>
           <button
             onClick={() => setView("map")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all sm:text-sm",
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
               view === "map" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <MapIcon className="w-3.5 h-3.5" /> Map
+            <MapIcon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Map</span>
           </button>
         </div>
 
@@ -273,7 +347,7 @@ export default function DiscoverPage() {
           value={timeFilter}
           onValueChange={(v) => setTimeFilter(v as TimeFilter)}
         >
-          <SelectTrigger className="h-9 w-[128px] rounded-lg border bg-card px-2.5 text-xs font-semibold sm:w-[150px] sm:text-sm">
+          <SelectTrigger className="h-9 w-[110px] rounded-full border bg-card px-3 text-xs font-semibold sm:w-[132px] sm:text-sm">
             <span className="flex min-w-0 items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <SelectValue />
@@ -298,8 +372,8 @@ export default function DiscoverPage() {
             }
           }}
         >
-          <SelectTrigger className="h-9 w-[138px] rounded-lg border bg-card px-2.5 text-xs font-semibold sm:w-[170px] sm:text-sm">
-            <SelectValue placeholder="Category" />
+          <SelectTrigger className="h-9 w-[118px] rounded-full border bg-card px-3 text-xs font-semibold sm:w-[150px] sm:text-sm">
+            <SelectValue placeholder="Topic" />
           </SelectTrigger>
           <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
             <SelectItem value="all" className="text-sm font-medium">
@@ -317,7 +391,7 @@ export default function DiscoverPage() {
           type="button"
           onClick={() => setFoodOnly((v) => !v)}
           className={cn(
-            "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-all sm:text-sm",
+            "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-all sm:text-sm",
             foodOnly
               ? "border-primary bg-primary text-white"
               : "border-border bg-card text-foreground hover:bg-muted"
@@ -327,6 +401,21 @@ export default function DiscoverPage() {
           <Coffee className="h-3.5 w-3.5" />
           Food
         </button>
+
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setTimeFilter("all");
+              setSelectedCategoryId(null);
+              setFoodOnly(false);
+            }}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition hover:text-foreground sm:text-sm"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear
+          </button>
+        )}
       </div>
 
       <div className="flex-1 min-h-[600px] relative">
@@ -429,14 +518,74 @@ export default function DiscoverPage() {
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-10 pb-8">
+          <div className="flex flex-col gap-8 pb-8">
+            {(joinedAnnouncementsLoading || joinedClubAnnouncements.length > 0) && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+                    Club updates
+                  </p>
+                  <Link href="/clubs">
+                    <span className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground">
+                      My clubs
+                    </span>
+                  </Link>
+                </div>
+
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {joinedAnnouncementsLoading
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                          key={index}
+                          className="w-[150px] shrink-0 rounded-[1.75rem] border bg-card p-3 shadow-sm"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-14 w-14 animate-pulse rounded-full bg-muted" />
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+                              <div className="h-2.5 w-12 animate-pulse rounded bg-muted" />
+                            </div>
+                          </div>
+                          <div className="mt-3 h-3 w-24 animate-pulse rounded bg-muted" />
+                          <div className="mt-2 h-10 animate-pulse rounded-2xl bg-muted" />
+                        </div>
+                      ))
+                    : joinedClubAnnouncements.map((item) => (
+                        <Link key={item.announcementId} href={`/clubs/${item.clubId}`}>
+                          <span className="group flex w-[150px] shrink-0 cursor-pointer flex-col gap-3 rounded-[1.75rem] border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-card text-lg font-extrabold text-white shadow-sm"
+                                style={{
+                                  backgroundColor: item.avatarColor,
+                                  boxShadow: `0 0 0 3px ${item.categoryColor}55`,
+                                }}
+                              >
+                                {item.avatarInitials}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-bold text-foreground">{item.clubName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="rounded-2xl bg-muted/40 px-3 py-2.5">
+                              <p className="line-clamp-2 text-sm font-semibold text-foreground">
+                                {item.announcementTitle}
+                              </p>
+                              <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                                {item.announcementBody}
+                              </p>
+                            </div>
+                          </span>
+                        </Link>
+                      ))}
+                </div>
+              </section>
+            )}
+
             <section>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-extrabold text-foreground">Events</h2>
-                <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-white">
-                  {filteredEvents.length}
-                </span>
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.length === 0 ? (
                   <div className="col-span-full py-14 flex flex-col items-center justify-center text-muted-foreground bg-card rounded-2xl border border-dashed">
