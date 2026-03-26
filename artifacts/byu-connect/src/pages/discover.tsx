@@ -193,29 +193,6 @@ export default function DiscoverPage() {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4">
-        <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm self-start sm:self-auto">
-          <button
-            onClick={() => setView("list")}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
-              view === "list" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <List className="w-4 h-4" /> List
-          </button>
-          <button
-            onClick={() => setView("map")}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
-              view === "map" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <MapIcon className="w-4 h-4" /> Map
-          </button>
-        </div>
-      </div>
-
       <div className="relative">
         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
@@ -270,159 +247,87 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      {view !== "map" && (
-        <>
-          {/* Mobile list view: compact dropdowns */}
-          <div className="flex flex-col gap-3 md:hidden pb-1">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">When</p>
-              <Select
-                value={timeFilter}
-                onValueChange={(v) => setTimeFilter(v as TimeFilter)}
-              >
-                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
-                  <span className="flex items-center gap-2">
-                    <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <SelectValue />
-                  </span>
-                </SelectTrigger>
-                <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
-                  {TIME_FILTERS.map((preset) => (
-                    <SelectItem key={preset.id} value={preset.id} className="font-medium">
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center p-1 bg-card rounded-lg border shadow-sm shrink-0">
+          <button
+            onClick={() => setView("list")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all sm:text-sm",
+              view === "list" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <List className="w-3.5 h-3.5" /> List
+          </button>
+          <button
+            onClick={() => setView("map")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all sm:text-sm",
+              view === "map" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MapIcon className="w-3.5 h-3.5" /> Map
+          </button>
+        </div>
 
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Category</p>
-              <Select
-                value={selectedCategoryId === null ? "all" : String(selectedCategoryId)}
-                onValueChange={(v) => {
-                  if (v === "all") setSelectedCategoryId(null);
-                  else {
-                    const id = parseInt(v, 10);
-                    setSelectedCategoryId(Number.isFinite(id) ? id : null);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
-                  <SelectItem value="all" className="font-medium">
-                    All categories
-                  </SelectItem>
-                  {categories?.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)} className="font-medium">
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Food</p>
-              <Select
-                value={foodOnly ? "food" : "any"}
-                onValueChange={(v) => setFoodOnly(v === "food")}
-              >
-                <SelectTrigger className="h-11 w-full rounded-xl border bg-card text-left font-semibold shadow-sm">
-                  <span className="flex items-center gap-2">
-                    <Coffee className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <SelectValue />
-                  </span>
-                </SelectTrigger>
-                <SelectContent position="popper" className="z-50">
-                  <SelectItem value="any" className="font-medium">
-                    All events
-                  </SelectItem>
-                  <SelectItem value="food" className="font-medium">
-                    Food provided only
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* md+: chip filters (list view) */}
-          <div className="hidden md:flex flex-wrap items-center gap-2">
+        <Select
+          value={timeFilter}
+          onValueChange={(v) => setTimeFilter(v as TimeFilter)}
+        >
+          <SelectTrigger className="h-9 w-[140px] shrink-0 rounded-lg border bg-card px-2.5 text-xs font-semibold sm:text-sm">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <SelectValue />
+            </span>
+          </SelectTrigger>
+          <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
             {TIME_FILTERS.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => setTimeFilter(preset.id)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                  timeFilter === preset.id
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-card text-foreground hover:bg-muted"
-                )}
-              >
-                <span className="inline-flex items-center gap-1">
-                  <CalendarClock className="w-3.5 h-3.5" />
-                  {preset.label}
-                </span>
-              </button>
+              <SelectItem key={preset.id} value={preset.id} className="text-sm font-medium">
+                {preset.label}
+              </SelectItem>
             ))}
-            <button
-              type="button"
-              onClick={() => setFoodOnly((v) => !v)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                foodOnly
-                  ? "border-primary bg-primary text-white"
-                  : "border-border bg-card text-foreground hover:bg-muted"
-              )}
-            >
-              <span className="inline-flex items-center gap-1">
-                <Coffee className="w-3.5 h-3.5" />
-                Food provided
-              </span>
-            </button>
-          </div>
+          </SelectContent>
+        </Select>
 
-          <div className="hidden md:flex flex-wrap items-center gap-2 pb-2">
-            <button
-              type="button"
-              onClick={() => setSelectedCategoryId(null)}
-              className={cn(
-                "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
-                selectedCategoryId === null
-                  ? "bg-primary border-primary text-white"
-                  : "bg-card border-border text-foreground hover:bg-muted"
-              )}
-            >
-              All
-            </button>
+        <Select
+          value={selectedCategoryId === null ? "all" : String(selectedCategoryId)}
+          onValueChange={(v) => {
+            if (v === "all") setSelectedCategoryId(null);
+            else {
+              const id = parseInt(v, 10);
+              setSelectedCategoryId(Number.isFinite(id) ? id : null);
+            }
+          }}
+        >
+          <SelectTrigger className="h-9 w-[150px] shrink-0 rounded-lg border bg-card px-2.5 text-xs font-semibold sm:text-sm">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
+            <SelectItem value="all" className="text-sm font-medium">
+              All categories
+            </SelectItem>
             {categories?.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
-                className={cn(
-                  "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
-                  selectedCategoryId === cat.id
-                    ? "text-white"
-                    : "bg-card border-border text-foreground hover:bg-muted"
-                )}
-                style={{
-                  backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
-                  borderColor: selectedCategoryId === cat.id ? cat.color : undefined
-                }}
-              >
-                {selectedCategoryId !== cat.id && (
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                )}
+              <SelectItem key={cat.id} value={String(cat.id)} className="text-sm font-medium">
                 {cat.name}
-              </button>
+              </SelectItem>
             ))}
-          </div>
-        </>
-      )}
+          </SelectContent>
+        </Select>
+
+        <button
+          type="button"
+          onClick={() => setFoodOnly((v) => !v)}
+          className={cn(
+            "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-all sm:text-sm",
+            foodOnly
+              ? "border-primary bg-primary text-white"
+              : "border-border bg-card text-foreground hover:bg-muted"
+          )}
+          aria-pressed={foodOnly}
+        >
+          <Coffee className="h-3.5 w-3.5" />
+          Food
+        </button>
+      </div>
 
       <div className="flex-1 min-h-[600px] relative">
         {isLoading ? (
