@@ -514,7 +514,13 @@ export default function EventDetailPage({
       </div>
 
       {!canManage && (
-        <div className="fixed bottom-16 md:bottom-6 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto md:min-w-[450px] bg-card/95 backdrop-blur-xl border-t md:border shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-4 md:rounded-2xl flex items-center justify-between gap-3 z-40">
+        <div
+          className={cn(
+            "fixed inset-x-0 z-[45] flex items-center justify-between gap-3 border-t bg-card/95 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] backdrop-blur-xl",
+            "bottom-0 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
+            "md:bottom-6 md:left-1/2 md:right-auto md:w-auto md:min-w-[450px] md:-translate-x-1/2 md:rounded-2xl md:border md:p-4 md:pb-4",
+          )}
+        >
           <div className="px-2 hidden sm:block">
             <p className="font-bold text-foreground">{event.isReserved ? "You're going!" : "Want to join?"}</p>
             <p className="text-xs text-muted-foreground font-medium">{event.isReserved ? "Spot reserved" : isFull ? "Waitlist available" : "Secure your spot now"}</p>
