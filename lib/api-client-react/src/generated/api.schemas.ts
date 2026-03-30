@@ -34,7 +34,13 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  bio: string | null;
   createdAt: string;
+}
+
+export interface UpdateUserBioRequest {
+  /** @maxLength 160 */
+  bio: string;
 }
 
 export interface AuthResponse {
@@ -143,10 +149,18 @@ export interface JoinToggleResponse {
   memberCount: number;
 }
 
+export interface ProfileClub {
+  id: number;
+  name: string;
+  description: string;
+}
+
 export interface UserProfile {
   user: User;
   savedEvents: Event[];
   reservations: Event[];
+  pastParticipatedEvents: Event[];
+  createdClubs: ProfileClub[];
   savedCount: number;
   reservationsCount: number;
 }

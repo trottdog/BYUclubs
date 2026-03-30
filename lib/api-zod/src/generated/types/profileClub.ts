@@ -5,9 +5,9 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Event } from "./event";
 
-export type EventDetail = Event & {
-  clubAvatar?: string;
-  clubDescription?: string;
-};
+export interface ProfileClub {
+  id: number;
+  name: string;
+  description: string;
+}

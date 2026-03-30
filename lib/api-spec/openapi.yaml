@@ -389,6 +389,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateUserBio
+      tags: [users]
+      summary: Update current user's bio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserBioRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /search:
     get:
@@ -465,9 +494,20 @@ components:
           type: string
         lastName:
           type: string
+        bio:
+          type: string
+          nullable: true
         createdAt:
           type: string
-      required: [id, email, firstName, lastName, createdAt]
+      required: [id, email, firstName, lastName, bio, createdAt]
+
+    UpdateUserBioRequest:
+      type: object
+      properties:
+        bio:
+          type: string
+          maxLength: 160
+      required: [bio]
 
     AuthResponse:
       type: object
@@ -694,11 +734,30 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Event"
+        pastParticipatedEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        createdClubs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileClub"
         savedCount:
           type: integer
         reservationsCount:
           type: integer
-      required: [user, savedEvents, reservations, savedCount, reservationsCount]
+      required: [user, savedEvents, reservations, pastParticipatedEvents, createdClubs, savedCount, reservationsCount]
+
+    ProfileClub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+      required: [id, name, description]
 
     SearchResults:
       type: object

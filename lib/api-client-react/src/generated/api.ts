@@ -37,6 +37,7 @@ import type {
   SaveToggleResponse,
   SearchParams,
   SearchResults,
+  UpdateUserBioRequest,
   User,
   UserProfile,
 } from "./api.schemas";
@@ -1353,6 +1354,92 @@ export function useGetUserProfile<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update current user's bio
+ */
+export const getUpdateUserBioUrl = () => {
+  return `/api/users/profile`;
+};
+
+export const updateUserBio = async (
+  updateUserBioRequest: UpdateUserBioRequest,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getUpdateUserBioUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateUserBioRequest),
+  });
+};
+
+export const getUpdateUserBioMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserBio>>,
+    TError,
+    { data: BodyType<UpdateUserBioRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateUserBio>>,
+  TError,
+  { data: BodyType<UpdateUserBioRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateUserBio"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateUserBio>>,
+    { data: BodyType<UpdateUserBioRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateUserBio(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateUserBioMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateUserBio>>
+>;
+export type UpdateUserBioMutationBody = BodyType<UpdateUserBioRequest>;
+export type UpdateUserBioMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update current user's bio
+ */
+export const useUpdateUserBio = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserBio>>,
+    TError,
+    { data: BodyType<UpdateUserBioRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateUserBio>>,
+  TError,
+  { data: BodyType<UpdateUserBioRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateUserBioMutationOptions(options));
+};
 
 /**
  * @summary Search events and clubs

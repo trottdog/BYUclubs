@@ -5,9 +5,9 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Announcement } from "./announcement.js";
-import type { Club } from "./club.js";
-import type { Event } from "./event.js";
+import type { Announcement } from "./announcement";
+import type { Club } from "./club";
+import type { Event } from "./event";
 
 export type ClubDetail = Club & {
   upcomingEvents?: Event[];

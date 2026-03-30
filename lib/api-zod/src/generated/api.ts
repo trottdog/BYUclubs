@@ -38,6 +38,7 @@ export const LoginResponse = zod.object({
     email: zod.string(),
     firstName: zod.string(),
     lastName: zod.string(),
+    bio: zod.string().nullable(),
     createdAt: zod.string(),
   }),
 });
@@ -57,6 +58,7 @@ export const GetMeResponse = zod.object({
   email: zod.string(),
   firstName: zod.string(),
   lastName: zod.string(),
+  bio: zod.string().nullable(),
   createdAt: zod.string(),
 });
 
@@ -311,6 +313,7 @@ export const GetUserProfileResponse = zod.object({
     email: zod.string(),
     firstName: zod.string(),
     lastName: zod.string(),
+    bio: zod.string().nullable(),
     createdAt: zod.string(),
   }),
   savedEvents: zod.array(
@@ -365,8 +368,59 @@ export const GetUserProfileResponse = zod.object({
       longitude: zod.number(),
     }),
   ),
+  pastParticipatedEvents: zod.array(
+    zod.object({
+      id: zod.number(),
+      title: zod.string(),
+      description: zod.string(),
+      startTime: zod.string(),
+      endTime: zod.string(),
+      buildingId: zod.number(),
+      buildingName: zod.string(),
+      roomNumber: zod.string(),
+      categoryId: zod.number(),
+      categoryName: zod.string(),
+      categoryColor: zod.string(),
+      clubId: zod.number(),
+      clubName: zod.string(),
+      capacity: zod.number(),
+      reservedCount: zod.number(),
+      hasFood: zod.boolean(),
+      coverImageUrl: zod.string().nullish(),
+      tags: zod.array(zod.string()),
+      isSaved: zod.boolean(),
+      isReserved: zod.boolean(),
+      latitude: zod.number(),
+      longitude: zod.number(),
+    }),
+  ),
+  createdClubs: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      description: zod.string(),
+    }),
+  ),
   savedCount: zod.number(),
   reservationsCount: zod.number(),
+});
+
+/**
+ * @summary Update current user's bio
+ */
+export const updateUserBioBodyBioMax = 160;
+
+export const UpdateUserBioBody = zod.object({
+  bio: zod.string().max(updateUserBioBodyBioMax),
+});
+
+export const UpdateUserBioResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  bio: zod.string().nullable(),
+  createdAt: zod.string(),
 });
 
 /**

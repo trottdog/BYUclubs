@@ -29,6 +29,7 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   first_name    TEXT NOT NULL,
   last_name     TEXT NOT NULL,
+  bio           TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

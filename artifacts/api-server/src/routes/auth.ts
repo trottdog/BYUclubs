@@ -40,6 +40,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        bio: user.bio ?? null,
         createdAt: user.createdAt.toISOString(),
       },
     });
@@ -83,6 +84,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        bio: user.bio ?? null,
         createdAt: user.createdAt.toISOString(),
       },
     });
@@ -119,6 +121,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    bio: user.bio ?? null,
     createdAt: user.createdAt.toISOString(),
   });
   res.json(data);

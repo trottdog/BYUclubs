@@ -2,10 +2,48 @@
 import { Router } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import { db, usersTable, eventSavesTable, reservationsTable, eventsTable, buildingsTable, categoriesTable, clubsTable } from "@workspace/db";
-import { GetUserProfileResponse } from "@workspace/api-zod";
+import { GetUserProfileResponse, UpdateUserBioBody, GetMeResponse } from "@workspace/api-zod";
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router = Router();
+
+router.patch("/users/profile", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const parsed = UpdateUserBioBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const normalizedBio = parsed.data.bio.trim();
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ bio: normalizedBio.length > 0 ? normalizedBio : null })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) {
+    res.status(401).json({ error: "User not found." });
+    return;
+  }
+
+  res.json(
+    GetMeResponse.parse({
+      id: updated.id,
+      email: updated.email,
+      firstName: updated.firstName,
+      lastName: updated.lastName,
+      bio: updated.bio ?? null,
+      createdAt: updated.createdAt.toISOString(),
+    }),
+  );
+});
 
 router.get("/users/profile", async (req, res): Promise<void> => {
   const userId = getAuthUserId(req);
@@ -95,16 +133,47 @@ router.get("/users/profile", async (req, res): Promise<void> => {
     getEvents(reservedEventIds, { isSaved: false, isReserved: true }),
   ]);
 
+  const now = Date.now();
+  const pastParticipatedEvents = reservationEvents
+    .filter((event) => new Date(event.endTime).getTime() < now)
+    .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime());
+
+  let createdClubs: Array<{ id: number; name: string; description: string }> = [];
+  try {
+    const result = await db.execute(sql`
+      select c.id, c.name, c.description
+      from club_memberships cm
+      inner join clubs c on c.id = cm.club_id
+      where cm.user_id = ${userId}
+      and lower(coalesce(cm.role, '')) in ('owner', 'admin', 'club_admin')
+      order by c.name asc
+    `);
+
+    createdClubs = (result.rows ?? []).map((row: any) => ({
+      id: Number(row.id),
+      name: String(row.name ?? ""),
+      description: String(row.description ?? ""),
+    }));
+  } catch (err: any) {
+    // Compatibility: older DBs may not have the role column yet.
+    if (err?.code !== "42703") {
+      throw err;
+    }
+  }
+
   const profile = {
     user: {
       id: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      bio: user.bio ?? null,
       createdAt: user.createdAt.toISOString(),
     },
     savedEvents,
     reservations: reservationEvents,
+    pastParticipatedEvents,
+    createdClubs,
     savedCount: savedEventIds.length,
     reservationsCount: reservedEventIds.length,
   };

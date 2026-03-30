@@ -5,13 +5,16 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Event } from "./event.js";
-import type { User } from "./user.js";
+import type { Event } from "./event";
+import type { ProfileClub } from "./profileClub";
+import type { User } from "./user";
 
 export interface UserProfile {
   user: User;
   savedEvents: Event[];
   reservations: Event[];
+  pastParticipatedEvents: Event[];
+  createdClubs: ProfileClub[];
   savedCount: number;
   reservationsCount: number;
 }

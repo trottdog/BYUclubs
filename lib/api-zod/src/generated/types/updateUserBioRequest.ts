@@ -5,9 +5,8 @@
  * BYUconnect API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Event } from "./event";
 
-export type EventDetail = Event & {
-  clubAvatar?: string;
-  clubDescription?: string;
-};
+export interface UpdateUserBioRequest {
+  /** @maxLength 160 */
+  bio: string;
+}
