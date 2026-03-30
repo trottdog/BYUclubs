@@ -85,50 +85,32 @@ router.get("/users/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  async function getEvents(
-    eventIds: number[],
+  function hydrateEvents(
+    rows: Array<{
+      id: number;
+      title: string;
+      description: string;
+      startTime: Date;
+      endTime: Date;
+      buildingId: number;
+      buildingName: string;
+      roomNumber: string;
+      categoryId: number;
+      categoryName: string;
+      categoryColor: string;
+      clubId: number;
+      clubName: string;
+      capacity: number;
+      hasFood: boolean;
+      coverImageUrl: string | null;
+      tags: string[] | null;
+      latitude: number;
+      longitude: number;
+    }>,
+    reservedCountMap: Map<number, number>,
     state: { isSaved: boolean; isReserved: boolean },
   ) {
-    if (eventIds.length === 0) return [];
-    const events = await db
-      .select({
-        id: eventsTable.id,
-        title: eventsTable.title,
-        description: eventsTable.description,
-        startTime: eventsTable.startTime,
-        endTime: eventsTable.endTime,
-        buildingId: eventsTable.buildingId,
-        buildingName: buildingsTable.name,
-        roomNumber: eventsTable.roomNumber,
-        categoryId: eventsTable.categoryId,
-        categoryName: categoriesTable.name,
-        categoryColor: categoriesTable.color,
-        clubId: eventsTable.clubId,
-        clubName: clubsTable.name,
-        capacity: eventsTable.capacity,
-        hasFood: eventsTable.hasFood,
-        coverImageUrl: eventsTable.coverImageUrl,
-        tags: eventsTable.tags,
-        latitude: buildingsTable.latitude,
-        longitude: buildingsTable.longitude,
-      })
-      .from(eventsTable)
-      .innerJoin(buildingsTable, eq(eventsTable.buildingId, buildingsTable.id))
-      .innerJoin(categoriesTable, eq(eventsTable.categoryId, categoriesTable.id))
-      .innerJoin(clubsTable, eq(eventsTable.clubId, clubsTable.id))
-      .where(sql`${eventsTable.id} = ANY(${sql.raw(`ARRAY[${eventIds.join(",")}]`)})`);
-
-    const reservedCountMap = new Map<number, number>();
-    const reservationCounts = await db
-      .select({ eventId: reservationsTable.eventId, count: sql<number>`count(*)::int` })
-      .from(reservationsTable)
-      .where(sql`${reservationsTable.eventId} = ANY(${sql.raw(`ARRAY[${eventIds.join(",")}]`)})`)
-      .groupBy(reservationsTable.eventId);
-    for (const rc of reservationCounts) {
-      reservedCountMap.set(rc.eventId, rc.count);
-    }
-
-    return events.map((e) => ({
+    return rows.map((e) => ({
       ...e,
       startTime: e.startTime.toISOString(),
       endTime: e.endTime.toISOString(),
@@ -155,9 +137,82 @@ router.get("/users/profile", async (req, res): Promise<void> => {
   const savedEventIds = saves.map((s) => s.eventId);
   const reservedEventIds = reservationRows.map((r) => r.eventId);
 
+  const allRelevantEventIds = Array.from(new Set([...savedEventIds, ...reservedEventIds]));
+  const reservedCountMap = new Map<number, number>();
+  if (allRelevantEventIds.length > 0) {
+    const reservationCounts = await db
+      .select({ eventId: reservationsTable.eventId, count: sql<number>`count(*)::int` })
+      .from(reservationsTable)
+      .where(sql`${reservationsTable.eventId} = ANY(${sql.raw(`ARRAY[${allRelevantEventIds.join(",")}]`)})`)
+      .groupBy(reservationsTable.eventId);
+    for (const rc of reservationCounts) {
+      reservedCountMap.set(rc.eventId, rc.count);
+    }
+  }
+
+  const savedEventRows = await db
+    .select({
+      id: eventsTable.id,
+      title: eventsTable.title,
+      description: eventsTable.description,
+      startTime: eventsTable.startTime,
+      endTime: eventsTable.endTime,
+      buildingId: eventsTable.buildingId,
+      buildingName: buildingsTable.name,
+      roomNumber: eventsTable.roomNumber,
+      categoryId: eventsTable.categoryId,
+      categoryName: categoriesTable.name,
+      categoryColor: categoriesTable.color,
+      clubId: eventsTable.clubId,
+      clubName: clubsTable.name,
+      capacity: eventsTable.capacity,
+      hasFood: eventsTable.hasFood,
+      coverImageUrl: eventsTable.coverImageUrl,
+      tags: eventsTable.tags,
+      latitude: buildingsTable.latitude,
+      longitude: buildingsTable.longitude,
+    })
+    .from(eventSavesTable)
+    .innerJoin(eventsTable, eq(eventSavesTable.eventId, eventsTable.id))
+    .innerJoin(buildingsTable, eq(eventsTable.buildingId, buildingsTable.id))
+    .innerJoin(categoriesTable, eq(eventsTable.categoryId, categoriesTable.id))
+    .innerJoin(clubsTable, eq(eventsTable.clubId, clubsTable.id))
+    .where(eq(eventSavesTable.userId, userId))
+    .orderBy(eventSavesTable.savedAt);
+
+  const reservationEventRows = await db
+    .select({
+      id: eventsTable.id,
+      title: eventsTable.title,
+      description: eventsTable.description,
+      startTime: eventsTable.startTime,
+      endTime: eventsTable.endTime,
+      buildingId: eventsTable.buildingId,
+      buildingName: buildingsTable.name,
+      roomNumber: eventsTable.roomNumber,
+      categoryId: eventsTable.categoryId,
+      categoryName: categoriesTable.name,
+      categoryColor: categoriesTable.color,
+      clubId: eventsTable.clubId,
+      clubName: clubsTable.name,
+      capacity: eventsTable.capacity,
+      hasFood: eventsTable.hasFood,
+      coverImageUrl: eventsTable.coverImageUrl,
+      tags: eventsTable.tags,
+      latitude: buildingsTable.latitude,
+      longitude: buildingsTable.longitude,
+    })
+    .from(reservationsTable)
+    .innerJoin(eventsTable, eq(reservationsTable.eventId, eventsTable.id))
+    .innerJoin(buildingsTable, eq(eventsTable.buildingId, buildingsTable.id))
+    .innerJoin(categoriesTable, eq(eventsTable.categoryId, categoriesTable.id))
+    .innerJoin(clubsTable, eq(eventsTable.clubId, clubsTable.id))
+    .where(eq(reservationsTable.userId, userId))
+    .orderBy(reservationsTable.reservedAt);
+
   const [savedEvents, reservationEvents] = await Promise.all([
-    getEvents(savedEventIds, { isSaved: true, isReserved: false }),
-    getEvents(reservedEventIds, { isSaved: false, isReserved: true }),
+    Promise.resolve(hydrateEvents(savedEventRows, reservedCountMap, { isSaved: true, isReserved: false })),
+    Promise.resolve(hydrateEvents(reservationEventRows, reservedCountMap, { isSaved: false, isReserved: true })),
   ]);
 
   const now = Date.now();
