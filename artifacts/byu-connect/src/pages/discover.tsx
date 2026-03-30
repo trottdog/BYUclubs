@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
 import {
   getGetClubQueryOptions,
   useGetBuildings,
@@ -24,7 +23,6 @@ import {
   List,
   Map as MapIcon,
   Search as SearchIcon,
-  ArrowUpRight,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -42,6 +40,14 @@ const TIME_FILTERS: Array<{ id: TimeFilter; label: string }> = [
   { id: "week", label: "THIS WEEK" },
   { id: "upcoming", label: "UPCOMING" },
 ];
+
+/** Hero title when a time filter is active (not “all time”) */
+const TIME_FILTER_HEADLINE: Record<Exclude<TimeFilter, "all">, string> = {
+  now: "LIVE NOW",
+  today: "TODAY",
+  week: "THIS WEEK",
+  upcoming: "UPCOMING",
+};
 
 export default function DiscoverPage() {
   const { user } = useAuth();
@@ -158,9 +164,9 @@ export default function DiscoverPage() {
     Number(foodOnly);
 
   return (
-    <div className="w-full flex flex-col gap-24 overflow-x-hidden">
+    <div className="w-full flex flex-col gap-8 overflow-x-hidden md:gap-10">
       {/* Official header — LinkedIn-style wide cover (photo stays vivid; gradient only anchors text at bottom) */}
-      <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(42vw,280px)] sm:min-h-[260px] md:min-h-[300px]">
+      <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(36vw,220px)] sm:min-h-[200px] md:min-h-[220px]">
         <img
           src="/images/discover-campus-life.png"
           alt=""
@@ -176,28 +182,37 @@ export default function DiscoverPage() {
           aria-hidden
         />
 
-        <div className="relative z-10 flex min-h-[min(42vw,280px)] flex-col justify-between gap-8 p-6 sm:min-h-[260px] sm:p-8 md:min-h-[300px] md:p-10">
+        <div className="relative z-10 flex min-h-[min(36vw,220px)] flex-col justify-between gap-4 p-5 sm:min-h-[200px] sm:p-6 md:min-h-[220px] md:p-8">
           <div className="flex items-center gap-4 text-white">
             <ShieldCheck className="h-5 w-5 shrink-0 fill-current text-white" />
             <p className="connect-eyebrow !text-white/95">BYU CONNECT</p>
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
             <h1 className="connect-display-title text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
-              DISCOVER <span className="text-[color:rgb(147,197,253)]">CAMPUS</span> LIFE
+              {timeFilter === "all" ? (
+                <>
+                  DISCOVER <span className="text-[color:rgb(147,197,253)]">CAMPUS</span> LIFE
+                </>
+              ) : (
+                <span className="text-[color:rgb(147,197,253)]">
+                  {TIME_FILTER_HEADLINE[timeFilter as Exclude<TimeFilter, "all">]}
+                </span>
+              )}
             </h1>
-            <div className="flex flex-col gap-8 md:flex-row md:items-end md:gap-12">
-              <p className="max-w-xl border-l-2 border-white/70 pl-6 text-sm font-medium leading-relaxed text-white/95">
-                Find events, clubs, and places on campus. Student organizations keep the community connected—browse what&apos;s
-                happening and where.
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <p className="max-w-lg text-xs font-medium leading-relaxed text-white/85 sm:text-sm">
+                {timeFilter === "all"
+                  ? "Find events, clubs, and places on campus."
+                  : "Showing events for this time window. Use the filter above to switch."}
               </p>
-              <div className="flex shrink-0 gap-8">
+              <div className="flex shrink-0 gap-6 sm:gap-8">
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold leading-none tracking-tight text-[color:rgb(147,197,253)]">Live</span>
+                  <span className="text-xl font-bold leading-none tracking-tight text-[color:rgb(147,197,253)] sm:text-2xl">Live</span>
                   <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Status</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold leading-none tracking-tight text-white">{events?.length ?? 0}</span>
+                  <span className="text-xl font-bold leading-none tracking-tight text-white sm:text-2xl">{events?.length ?? 0}</span>
                   <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Events</span>
                 </div>
               </div>
@@ -207,8 +222,8 @@ export default function DiscoverPage() {
       </div>
 
       {/* Industrial Search & Filter */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md py-6 -mx-8 px-8 border-y border-border">
-        <div className="flex flex-col gap-6">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md py-3 -mx-8 px-8 border-y border-border">
+        <div className="flex flex-col gap-3">
           <div className="relative">
             <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
             <input
@@ -333,7 +348,7 @@ export default function DiscoverPage() {
 
       <div className="flex-1">
         {isLoading ? (
-          <div className="w-full h-96 flex flex-col items-center justify-center gap-8">
+          <div className="flex h-64 w-full flex-col items-center justify-center gap-4">
             <div className="w-16 h-1 bg-muted relative overflow-hidden">
                <motion.div 
                  initial={{ left: "-100%" }}
@@ -345,28 +360,28 @@ export default function DiscoverPage() {
             <p className="connect-eyebrow">LOADING CAMPUS DATA...</p>
           </div>
         ) : view === "map" ? (
-          <div className="h-[700px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <MapView events={filteredEvents} buildings={filteredBuildings} />
           </div>
         ) : view === "clubs" ? (
           <section>
-            <div className="mb-12 flex items-center justify-between border-b-2 border-border pb-6">
-              <div className="flex flex-col gap-2">
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <div className="flex flex-col gap-0.5">
                 <p className="connect-eyebrow">COMMUNITY</p>
-                <h2 className="text-5xl font-bold tracking-tight text-foreground">Active Clubs</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Active Clubs</h2>
               </div>
               <div className="bg-muted border border-border px-6 py-3 text-sm font-medium text-muted-foreground">
                 {filteredClubs.length} CLUBS
               </div>
             </div>
             {filteredClubs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-40">
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-20">
                 <p className="text-xl font-semibold text-muted-foreground">No clubs found</p>
                 <p className="mt-2 text-sm font-medium text-muted-foreground">Try adjusting search or filters</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
                   {filteredClubs.map((club) => (
                     <ClubCard key={club.id} club={club} />
                   ))}
@@ -376,21 +391,9 @@ export default function DiscoverPage() {
           </section>
         ) : (
           <section>
-            <div className="mb-12 flex items-end justify-between border-b-4 border-primary pb-6">
-              <div className="flex flex-col gap-2">
-                <p className="connect-eyebrow">FEATURED</p>
-                <h2 className="text-5xl font-bold tracking-tight text-foreground">Live Events</h2>
-              </div>
-              <Link
-                href="/events"
-                className="hidden items-center gap-3 text-sm font-medium text-primary transition-colors hover:text-accent md:flex"
-              >
-                SEE ALL EVENTS <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-6 rounded-2xl border border-border bg-card p-6 shadow-sm md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm md:grid-cols-2 md:gap-5 md:p-5 lg:grid-cols-3">
               {filteredEvents.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-40">
+                <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-20">
                   <p className="text-xl font-semibold text-muted-foreground">No events found</p>
                 </div>
               ) : (
