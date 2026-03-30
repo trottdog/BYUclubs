@@ -18,7 +18,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation(`/auth?return=${encodeURIComponent("/profile")}`);
+      setLocation(`/auth?return=${encodeURIComponent("/profile")}`, { replace: true });
     }
   }, [user, authLoading, setLocation]);
 

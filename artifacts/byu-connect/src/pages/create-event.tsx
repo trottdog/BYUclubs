@@ -58,7 +58,7 @@ export default function CreateEventPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate(`/auth?return=${encodeURIComponent("/events/new")}`);
+      navigate(`/auth?return=${encodeURIComponent("/events/new")}`, { replace: true });
     }
   }, [user, authLoading, navigate]);
 

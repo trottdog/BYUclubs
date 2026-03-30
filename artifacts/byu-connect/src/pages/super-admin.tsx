@@ -54,7 +54,7 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate(`/auth?return=${encodeURIComponent("/super-admin")}`);
+      navigate(`/auth?return=${encodeURIComponent("/super-admin")}`, { replace: true });
       return;
     }
     if (user && !superAdminEmailSet.has(user.email.toLowerCase())) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { getSafeReturnPath } from "@/lib/auth-return";
+import { getAuthPageBackPath, getSafeReturnPath } from "@/lib/auth-return";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -31,7 +31,7 @@ export default function AuthPage() {
   const goBack = () => {
     const dest =
       typeof window !== "undefined"
-        ? getSafeReturnPath(window.location.search)
+        ? getAuthPageBackPath(window.location.search)
         : "/";
     setLocation(dest);
   };
