@@ -479,6 +479,18 @@ VALUES
  '2026-04-06 17:30:00+00', '2026-04-06 20:00:00+00',
  1, 'Kitchen Lab', 10, 11, 16, TRUE, ARRAY['Chinese','cooking','dim sum']);
 
+UPDATE events
+SET cover_image_url = '/images/international-food-festival.png'
+WHERE title = 'International Food Festival';
+
+UPDATE events
+SET cover_image_url = '/images/intro-machine-learning.png'
+WHERE title = 'Intro to Machine Learning';
+
+UPDATE events
+SET cover_image_url = '/images/pre-med-study-session.png'
+WHERE title = 'Pre-Med Study Session';
+
 
 -- Announcements  (10 club announcements)
 INSERT INTO announcements (club_id, title, body) VALUES

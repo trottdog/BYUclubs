@@ -81,14 +81,30 @@ async function main() {
     return new Date(start.getTime() + durationHours * 60 * 60 * 1000);
   }
 
+  type EventSeedRow = {
+    title: string;
+    desc: string;
+    start: Date;
+    duration: number;
+    bldg: number;
+    room: string;
+    cat: number;
+    club: number;
+    cap: number;
+    food: boolean;
+    tags: string[];
+    /** Public path served from byu-connect `public/` (same-origin). */
+    cover?: string;
+  };
+
   // 40 events spread over 2 weeks
-  const eventData = [
+  const eventData: EventSeedRow[] = [
     // Today events - some happening soon
-    { title: "Intro to Machine Learning", desc: "Learn ML fundamentals with hands-on Python examples using scikit-learn and real datasets.", start: futureDate(0, 14), duration: 2, bldg: 7, room: "B101", cat: catMap["Technology"], club: clubMap["BYU CS Society"], cap: 80, food: false, tags: ["ML", "Python", "workshop"] },
+    { title: "Intro to Machine Learning", desc: "Learn ML fundamentals with hands-on Python examples using scikit-learn and real datasets.", start: futureDate(0, 14), duration: 2, bldg: 7, room: "B101", cat: catMap["Technology"], club: clubMap["BYU CS Society"], cap: 80, food: false, tags: ["ML", "Python", "workshop"], cover: "/images/intro-machine-learning.png" },
     { title: "Resume Workshop for CS Majors", desc: "Get personalized resume feedback from recruiters at top tech companies. Limited spots!", start: futureDate(0, 16), duration: 1.5, bldg: 4, room: "A201", cat: catMap["Career & Professional"], club: clubMap["BYU CS Society"], cap: 30, food: false, tags: ["career", "resume", "tech"] },
     { title: "International Food Festival", desc: "Taste dishes from 30+ countries prepared by BYU's international student community. Free for all!", start: futureDate(0, 11), duration: 3, bldg: 0, room: "Ballroom", cat: catMap["International"], club: clubMap["International Students Association"], cap: 300, food: true, tags: ["food", "culture", "international"] },
     { title: "Ballroom Dance Social", desc: "No experience needed! Learn basic waltz and tango steps in a fun, welcoming environment.", start: futureDate(0, 19), duration: 2, bldg: 9, room: "Main Floor", cat: catMap["Arts & Culture"], club: clubMap["BYU Ballroom Dance Club"], cap: 100, food: false, tags: ["dance", "social", "beginner"] },
-    { title: "Pre-Med Study Session", desc: "Group MCAT prep with upper-division pre-med students. Bring your materials and questions.", start: futureDate(0, 15), duration: 3, bldg: 1, room: "4th Floor", cat: catMap["Academic"], club: clubMap["Pre-Med Association"], cap: 25, food: false, tags: ["MCAT", "study", "premed"] },
+    { title: "Pre-Med Study Session", desc: "Group MCAT prep with upper-division pre-med students. Bring your materials and questions.", start: futureDate(0, 15), duration: 3, bldg: 1, room: "4th Floor", cat: catMap["Academic"], club: clubMap["Pre-Med Association"], cap: 25, food: false, tags: ["MCAT", "study", "premed"], cover: "/images/pre-med-study-session.png" },
     // Tomorrow
     { title: "Startup Pitch Competition", desc: "Watch student entrepreneurs pitch their startup ideas to a panel of investors and win prizes.", start: futureDate(1, 18), duration: 2, bldg: 2, room: "B150", cat: catMap["Career & Professional"], club: clubMap["Entrepreneur Club"], cap: 120, food: true, tags: ["startup", "pitch", "business"] },
     { title: "BYU Trails: Rock Canyon Hike", desc: "Moderate 5-mile hike up Rock Canyon with stunning views of Utah Valley. Bring water and snacks.", start: futureDate(1, 8), duration: 4, bldg: 9, room: "Parking Lot A", cat: catMap["Sports & Fitness"], club: clubMap["BYU Hiking & Outdoors"], cap: 40, food: false, tags: ["hiking", "outdoors", "Rock Canyon"] },
@@ -157,6 +173,7 @@ async function main() {
       capacity: e.cap,
       hasFood: e.food,
       tags: e.tags,
+      coverImageUrl: e.cover ?? null,
     });
   }
 

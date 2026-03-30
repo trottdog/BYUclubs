@@ -18,6 +18,15 @@ images:
   - path: "artifacts/byu-connect/public/images/placeholder-club.png"
     description: "Soft abstract gradient background in light slate gray and subtle BYU blue, very minimal and clean"
     aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/international-food-festival.png"
+    description: "Outdoor communal meal — long table from above, brunch-style spread; use for International Food Festival event cover"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/intro-machine-learning.png"
+    description: "Three developers collaborating at desks with code editor and laptop; use for Intro to Machine Learning workshop cover"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/pre-med-study-session.png"
+    description: "Campus atrium with international flags, club-fair style table and students; used as Pre-Med Study Session event cover"
+    aspect_ratio: "16:9"
 
 notes:
   - Using session-based authentication from /api/auth/me
