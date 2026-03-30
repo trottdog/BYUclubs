@@ -95,32 +95,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {isSuperAdmin && (
           <div className="px-6 pb-10">
-            <div className="connect-panel border-white/10 bg-white/5 relative group">
-              <div className="flex items-start gap-3 relative z-10">
-                <Activity className="w-3.5 h-3.5 mt-0.5 text-white shrink-0" />
-                <div>
-                  <p className="connect-eyebrow !text-[9px] !text-white/70">
-                    LIVE CAMPUS
+            <div
+              className="relative overflow-hidden rounded-2xl border border-white/35 bg-white/[0.18] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/15 backdrop-blur-[2px]"
+              aria-label="Campus activity summary"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14)_0%,transparent_55%)]" />
+              <div className="relative flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/25">
+                  <Activity className="h-4 w-4 text-white" strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white">
+                    Live campus
                   </p>
-                  <p className="mt-2 text-sm text-white leading-relaxed font-medium">
+                  <p className="mt-2 text-sm font-medium leading-snug text-white/95">
                     Events and clubs across campus at a glance.
                   </p>
                 </div>
               </div>
-              <div className="mt-8 space-y-4">
-                <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[11px] font-medium text-white/70 flex items-center gap-2">
-                    <CalendarDays className="w-3 h-3" />
-                    EVENTS
+              <div className="relative mt-6 space-y-3 border-t border-white/25 pt-5">
+                <div className="flex items-end justify-between gap-3">
+                  <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/85">
+                    <CalendarDays className="h-3.5 w-3.5 text-white/90" />
+                    Events
                   </p>
-                  <p className="text-2xl font-bold text-white leading-none">{totalEvents}</p>
+                  <p className="tabular-nums text-3xl font-bold tracking-tight text-white drop-shadow-sm">
+                    {totalEvents}
+                  </p>
                 </div>
-                <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[11px] font-medium text-white/70 flex items-center gap-2">
-                    <Users className="w-3 h-3" />
-                    CLUBS
+                <div className="flex items-end justify-between gap-3 border-t border-white/15 pt-3">
+                  <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/85">
+                    <Users className="h-3.5 w-3.5 text-white/90" />
+                    Clubs
                   </p>
-                  <p className="text-2xl font-bold text-white leading-none">{totalClubs}</p>
+                  <p className="tabular-nums text-3xl font-bold tracking-tight text-white drop-shadow-sm">
+                    {totalClubs}
+                  </p>
                 </div>
               </div>
             </div>
