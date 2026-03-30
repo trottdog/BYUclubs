@@ -73,15 +73,14 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const [createdUser] = await db
+    await db
       .insert(usersTable)
-      .values({ email, passwordHash, firstName, lastName })
-      .returning({ id: usersTable.id });
+      .values({ email, passwordHash, firstName, lastName });
 
     const [user] = await db
       .select(publicUserColumns)
       .from(usersTable)
-      .where(eq(usersTable.id, createdUser.id));
+      .where(eq(usersTable.email, email));
 
     if (!user) {
       res.status(500).json({ error: "Registration failed", detail: "Created user could not be loaded." });
