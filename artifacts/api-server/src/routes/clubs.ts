@@ -276,18 +276,34 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
     .orderBy(announcementsTable.createdAt)
     .limit(10);
 
-  const photos = await db
-    .select({
-      id: clubPhotosTable.id,
-      clubId: clubPhotosTable.clubId,
-      imageUrl: clubPhotosTable.imageUrl,
-      caption: clubPhotosTable.caption,
-      addedByUserId: clubPhotosTable.addedByUserId,
-      createdAt: clubPhotosTable.createdAt,
-    })
-    .from(clubPhotosTable)
-    .where(eq(clubPhotosTable.clubId, id))
-    .orderBy(clubPhotosTable.createdAt);
+  let photos: Array<{
+    id: number;
+    clubId: number;
+    imageUrl: string;
+    caption: string | null;
+    addedByUserId: number | null;
+    createdAt: Date;
+  }> = [];
+
+  try {
+    photos = await db
+      .select({
+        id: clubPhotosTable.id,
+        clubId: clubPhotosTable.clubId,
+        imageUrl: clubPhotosTable.imageUrl,
+        caption: clubPhotosTable.caption,
+        addedByUserId: clubPhotosTable.addedByUserId,
+        createdAt: clubPhotosTable.createdAt,
+      })
+      .from(clubPhotosTable)
+      .where(eq(clubPhotosTable.clubId, id))
+      .orderBy(clubPhotosTable.createdAt);
+  } catch (err: any) {
+    // Backward compatibility while production DB catches up with club_photos migration.
+    if (err?.code !== "42P01") {
+      throw err;
+    }
+  }
 
   const detail = {
     ...club,
