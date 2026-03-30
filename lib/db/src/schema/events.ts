@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { buildingsTable } from "./buildings.js";
 import { categoriesTable } from "./categories.js";
 import { clubsTable } from "./clubs.js";
+import { usersTable } from "./users.js";
 
 export const eventsTable = pgTable("events", {
   id: serial("id").primaryKey(),
@@ -19,6 +20,7 @@ export const eventsTable = pgTable("events", {
   hasFood: boolean("has_food").notNull().default(false),
   coverImageUrl: text("cover_image_url"),
   tags: text("tags").array().notNull().default([]),
+  createdByUserId: integer("created_by_user_id").references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

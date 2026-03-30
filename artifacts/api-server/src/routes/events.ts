@@ -73,6 +73,44 @@ async function getIndependentClubId(): Promise<number | null> {
   return club?.id ?? null;
 }
 
+async function getEventManageContext(eventId: number): Promise<{
+  id: number;
+  clubId: number;
+  createdByUserId: number | null;
+} | null> {
+  try {
+    const result = await db.execute(sql`
+      select id, club_id, created_by_user_id
+      from events
+      where id = ${eventId}
+      limit 1
+    `);
+    const row = result.rows?.[0];
+    if (!row) return null;
+    return {
+      id: Number(row.id),
+      clubId: Number(row.club_id),
+      createdByUserId: row.created_by_user_id == null ? null : Number(row.created_by_user_id),
+    };
+  } catch (err: any) {
+    if (err?.code !== "42703") throw err;
+
+    const result = await db.execute(sql`
+      select id, club_id
+      from events
+      where id = ${eventId}
+      limit 1
+    `);
+    const row = result.rows?.[0];
+    if (!row) return null;
+    return {
+      id: Number(row.id),
+      clubId: Number(row.club_id),
+      createdByUserId: null,
+    };
+  }
+}
+
 async function buildEventList(userId: number | null, conditions: any[] = []) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -244,8 +282,28 @@ router.post("/events", async (req, res): Promise<void> => {
       capacity,
       hasFood,
       tags: tags ?? [],
+      createdByUserId: userId,
     })
-    .returning();
+    .returning()
+    .catch(async (err: any) => {
+      if (err?.code !== "42703") throw err;
+      return db
+        .insert(eventsTable)
+        .values({
+          title,
+          description,
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          buildingId,
+          roomNumber,
+          categoryId,
+          clubId,
+          capacity,
+          hasFood,
+          tags: tags ?? [],
+        })
+        .returning();
+    });
 
   const events = await buildEventList(userId, [eq(eventsTable.id, event.id)]);
   res.status(201).json(events[0]);
@@ -263,17 +321,13 @@ async function handleEventCanManage(req: any, res: any, id: number): Promise<voi
     return;
   }
 
-  const [event] = await db
-    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
-    .from(eventsTable)
-    .where(eq(eventsTable.id, id))
-    .limit(1);
+  const event = await getEventManageContext(id);
   if (!event) {
     res.status(404).json({ error: "Event not found." });
     return;
   }
 
-  const allowed = await canManageClub(userId, event.clubId);
+  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
   res.json({ canManage: allowed });
 }
 
@@ -302,17 +356,13 @@ async function handleEventAttendees(req: any, res: any, id: number): Promise<voi
     return;
   }
 
-  const [event] = await db
-    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
-    .from(eventsTable)
-    .where(eq(eventsTable.id, id))
-    .limit(1);
+  const event = await getEventManageContext(id);
   if (!event) {
     res.status(404).json({ error: "Event not found." });
     return;
   }
 
-  const allowed = await canManageClub(userId, event.clubId);
+  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
   if (!allowed) {
     res.status(403).json({ error: "You do not have permission to view attendees for this event." });
     return;
@@ -398,17 +448,15 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [existingEvent] = await db
-    .select({ id: eventsTable.id, clubId: eventsTable.clubId })
-    .from(eventsTable)
-    .where(eq(eventsTable.id, id))
-    .limit(1);
+  const existingEvent = await getEventManageContext(id);
   if (!existingEvent) {
     res.status(404).json({ error: "Event not found." });
     return;
   }
 
-  const allowed = await canManageClub(userId, existingEvent.clubId);
+  const allowed =
+    existingEvent.createdByUserId === userId ||
+    (await canManageClub(userId, existingEvent.clubId));
   if (!allowed) {
     res.status(403).json({ error: "You do not have permission to edit this event." });
     return;
@@ -537,6 +585,39 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
     return;
   }
   res.json(events[0]);
+});
+
+router.delete("/events/:id", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid event ID." });
+    return;
+  }
+
+  const event = await getEventManageContext(id);
+  if (!event) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+
+  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to delete this event." });
+    return;
+  }
+
+  await db.delete(eventSavesTable).where(eq(eventSavesTable.eventId, id));
+  await db.delete(reservationsTable).where(eq(reservationsTable.eventId, id));
+  await db.delete(eventsTable).where(eq(eventsTable.id, id));
+
+  res.json({ deleted: true });
 });
 
 router.post("/events/:id/save", async (req, res): Promise<void> => {

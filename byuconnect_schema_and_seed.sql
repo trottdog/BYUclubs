@@ -78,6 +78,7 @@ CREATE TABLE events (
   has_food        BOOLEAN     NOT NULL DEFAULT FALSE,
   cover_image_url TEXT,
   tags            TEXT[]      NOT NULL DEFAULT '{}',
+  created_by_user_id INTEGER REFERENCES users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

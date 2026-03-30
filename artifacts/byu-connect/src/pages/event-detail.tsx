@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useGetBuildings, useGetCategories, useGetClubs, useGetEvent, useSaveEvent, useReserveEvent } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, MapPin, Tag, Users, Bookmark, CheckCircle, Clock, UserRoundCheck, PencilLine } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Tag, Users, Bookmark, CheckCircle, Clock, UserRoundCheck, PencilLine, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -31,6 +31,7 @@ export default function EventDetailPage({
   const [canManage, setCanManage] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [attendees, setAttendees] = useState<Array<{ id: number; firstName: string; lastName: string; email: string; reservedAt: string }>>([]);
   const [editForm, setEditForm] = useState({
     title: "",
@@ -179,6 +180,42 @@ export default function EventDetailPage({
     }
   };
 
+  const deleteEvent = async () => {
+    if (!event || isDeleting) return;
+
+    const confirmed = window.confirm(
+      "Delete this event? This will also remove all saves and reservations for it.",
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "Failed to delete event.");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/users/profile"] });
+      toast({
+        title: "Event deleted",
+        description: "The event was removed successfully.",
+      });
+      setLocation("/");
+    } catch (err: any) {
+      toast({
+        title: "Delete failed",
+        description: err?.message || "Unable to delete the event.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-[50vh]">
@@ -266,7 +303,7 @@ export default function EventDetailPage({
                 <h3 className="text-lg font-extrabold text-foreground">Admin Controls</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                You can edit this event and review who has reserved a spot.
+                You can edit this event, review who has reserved a spot, or delete it entirely.
               </p>
               {isEditMode && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -359,13 +396,23 @@ export default function EventDetailPage({
                     Food provided
                   </label>
                   <div className="md:col-span-2">
-                    <button
-                      onClick={saveEventChanges}
-                      disabled={isSaving}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
-                    >
-                      {isSaving ? "Saving..." : "Save event changes"}
-                    </button>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={saveEventChanges}
+                        disabled={isSaving || isDeleting}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+                      >
+                        {isSaving ? "Saving..." : "Save event changes"}
+                      </button>
+                      <button
+                        onClick={deleteEvent}
+                        disabled={isSaving || isDeleting}
+                        className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive hover:text-white disabled:opacity-70"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {isDeleting ? "Deleting..." : "Delete event"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
