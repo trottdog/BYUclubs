@@ -11,7 +11,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation("/auth");
+      setLocation(`/auth?return=${encodeURIComponent("/profile")}`);
     }
   }, [user, authLoading, setLocation]);
 
@@ -35,47 +35,52 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
-      <div className="bg-card rounded-2xl border border-border shadow-sm p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6 relative overflow-hidden">
-        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary flex items-center justify-center text-4xl font-extrabold text-white shadow-md shrink-0 border-4 border-white">
-          {user.firstName[0]}{user.lastName[0]}
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 overflow-x-hidden pb-24 md:pb-12">
+      <div className="connect-card relative flex flex-col items-center gap-6 overflow-hidden border-2 border-border p-6 md:flex-row md:items-start md:p-10">
+        <div className="flex h-24 w-24 shrink-0 items-center justify-center border-2 border-primary bg-primary text-3xl font-black text-white md:h-32 md:w-32 md:text-4xl">
+          {user.firstName[0]}
+          {user.lastName[0]}
         </div>
-        
-        <div className="flex-1 text-center md:text-left pt-2">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">{user.firstName} {user.lastName}</h2>
-          <p className="text-muted-foreground font-medium mb-6">{user.email}</p>
-          
+
+        <div className="flex-1 pt-2 text-center md:text-left">
+          <p className="connect-eyebrow mb-1">Profile</p>
+          <h2 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+            {user.firstName} {user.lastName}
+          </h2>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{user.email}</p>
+
           {profileLoading ? (
-            <div className="flex items-center justify-center md:justify-start gap-4">
-              <div className="h-20 w-32 bg-muted rounded-xl animate-pulse" />
-              <div className="h-20 w-32 bg-muted rounded-xl animate-pulse" />
+            <div className="mt-6 flex items-center justify-center gap-4 md:justify-start">
+              <div className="h-20 w-32 animate-pulse bg-muted" />
+              <div className="h-20 w-32 animate-pulse bg-muted" />
             </div>
           ) : (
-            <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <div className="bg-muted/30 border rounded-xl p-4 min-w-[140px] flex flex-col items-center md:items-start">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Bookmark className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">Saved</span>
+            <div className="mt-6 flex flex-wrap justify-center gap-4 md:justify-start">
+              <div className="connect-panel flex min-w-[140px] flex-col items-center border-2 bg-white md:items-start">
+                <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+                  <Bookmark className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Saved</span>
                 </div>
-                <p className="text-3xl font-extrabold text-foreground">{profile?.savedCount || 0}</p>
+                <p className="text-3xl font-black italic text-foreground">{profile?.savedCount || 0}</p>
               </div>
-              
-              <div className="bg-muted/30 border rounded-xl p-4 min-w-[140px] flex flex-col items-center md:items-start">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <CalendarCheck className="w-4 h-4 text-[#22c55e]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">Reservations</span>
+
+              <div className="connect-panel flex min-w-[140px] flex-col items-center border-2 bg-white md:items-start">
+                <div className="mb-1 flex items-center gap-2 text-muted-foreground">
+                  <CalendarCheck className="h-4 w-4 text-[#22c55e]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Reservations</span>
                 </div>
-                <p className="text-3xl font-extrabold text-foreground">{profile?.reservationsCount || 0}</p>
+                <p className="text-3xl font-black italic text-foreground">{profile?.reservationsCount || 0}</p>
               </div>
             </div>
           )}
         </div>
 
-        <button 
+        <button
+          type="button"
           onClick={handleLogout}
-          className="md:absolute top-6 right-6 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-destructive hover:bg-destructive/10 transition-colors w-full md:w-auto justify-center mt-4 md:mt-0 border border-transparent hover:border-destructive/20"
+          className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-transparent px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 md:absolute md:right-6 md:top-6 md:mt-0 md:w-auto"
         >
-          <LogOut className="w-4 h-4" /> Sign Out
+          <LogOut className="h-4 w-4" /> Sign Out
         </button>
       </div>
 
@@ -86,15 +91,21 @@ export default function ProfilePage() {
       ) : profile && (
         <div className="space-y-12">
           <section>
-            <h3 className="text-2xl font-extrabold flex items-center gap-2 mb-6 text-foreground border-b pb-3">
-              <CalendarCheck className="w-6 h-6 text-[#22c55e]" /> My Reservations
-            </h3>
-            
+            <div className="mb-6 flex items-end gap-3 border-b-4 border-primary pb-4">
+              <CalendarCheck className="h-6 w-6 shrink-0 text-[#22c55e]" />
+              <div>
+                <p className="connect-section-label">Schedule</p>
+                <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  My reservations
+                </h3>
+              </div>
+            </div>
+
             {!profile.reservations || profile.reservations.length === 0 ? (
-              <div className="bg-card rounded-2xl border border-dashed p-10 text-center">
-                <CalendarCheck className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium text-lg">No reservations yet.</p>
-                <p className="text-sm mt-1">Spots you reserve will appear here.</p>
+              <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
+                <CalendarCheck className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+                <p className="font-bold uppercase tracking-wide text-muted-foreground">No reservations yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Spots you reserve will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -104,15 +115,21 @@ export default function ProfilePage() {
           </section>
 
           <section>
-            <h3 className="text-2xl font-extrabold flex items-center gap-2 mb-6 text-foreground border-b pb-3">
-              <Bookmark className="w-6 h-6 text-primary" /> Saved Events
-            </h3>
-            
+            <div className="mb-6 flex items-end gap-3 border-b-4 border-primary pb-4">
+              <Bookmark className="h-6 w-6 shrink-0 text-primary" />
+              <div>
+                <p className="connect-section-label">Bookmarks</p>
+                <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  Saved events
+                </h3>
+              </div>
+            </div>
+
             {!profile.savedEvents || profile.savedEvents.length === 0 ? (
-              <div className="bg-card rounded-2xl border border-dashed p-10 text-center">
-                <Bookmark className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium text-lg">No saved events.</p>
-                <p className="text-sm mt-1">Events you bookmark will appear here.</p>
+              <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
+                <Bookmark className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+                <p className="font-bold uppercase tracking-wide text-muted-foreground">No saved events.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Events you bookmark will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

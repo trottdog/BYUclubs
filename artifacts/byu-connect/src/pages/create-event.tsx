@@ -58,7 +58,7 @@ export default function CreateEventPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      navigate(`/auth?return=${encodeURIComponent("/events/new")}`);
     }
   }, [user, authLoading, navigate]);
 
@@ -141,10 +141,15 @@ export default function CreateEventPage() {
   if (authLoading || !user) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
-      <div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Create Event</h1>
-        <p className="text-muted-foreground mt-1 font-medium">Host a new event for your club on campus.</p>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-x-hidden pb-24 md:pb-12">
+      <div className="border-b-4 border-primary pb-6">
+        <p className="connect-eyebrow mb-2">New event</p>
+        <h1 className="font-sans text-3xl font-black uppercase italic tracking-tighter text-foreground md:text-4xl">
+          Create event
+        </h1>
+        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+          Host a campus event for your club or group.
+        </p>
       </div>
 
       <div className="flex items-center justify-between mb-4 relative px-1 sm:px-2">
@@ -171,7 +176,7 @@ export default function CreateEventPage() {
         ))}
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm p-6 md:p-8 mt-4">
+      <div className="connect-card mt-4 border-2 border-border p-6 md:p-8">
         {error && (
           <div className="mb-6 p-4 bg-destructive/10 text-destructive font-semibold text-sm rounded-xl border border-destructive/20 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
