@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Club } from "@workspace/api-client-react";
 import { Users, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { DEFAULT_CLUB_AVATAR_URL } from "@/lib/avatars";
 
 export function ClubCard({
   club,
@@ -17,10 +18,8 @@ export function ClubCard({
         className="connect-card border-t-primary group flex flex-col gap-6 bg-white p-8"
       >
         <div className="flex items-start justify-between">
-          <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center text-lg font-bold border border-primary text-white bg-primary group-hover:bg-accent group-hover:border-accent transition-colors duration-200"
-          >
-            {club.avatarInitials}
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden border border-primary bg-white p-1 transition-colors duration-200 group-hover:border-accent">
+            <img src={DEFAULT_CLUB_AVATAR_URL} alt="" className="h-full w-full object-contain" />
           </div>
           <motion.div 
             initial={{ opacity: 0 }}

@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { authHrefWithReturn } from "@/lib/auth-return";
 import { useGetClubs, useGetEvents } from "@workspace/api-client-react";
 import { Activity, CalendarDays, Map, Plus, ShieldCheck, User as UserIcon, Users, Menu, X, ArrowUpRight } from "lucide-react";
+import { DEFAULT_USER_AVATAR_URL } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -129,8 +130,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-6 border-t border-white/5 bg-black/10">
           {user ? (
             <Link href="/profile" className="flex items-center gap-4 p-4 hover:bg-white/5 cursor-pointer transition-all duration-200 group border border-transparent hover:border-white/10">
-              <div className="w-10 h-10 bg-white flex items-center justify-center text-primary font-black text-xs shrink-0 border border-white transition-all">
-                {user.firstName[0]}{user.lastName[0]}
+              <div className="h-10 w-10 shrink-0 overflow-hidden border border-white/40 bg-white/10 transition-all">
+                <img src={DEFAULT_USER_AVATAR_URL} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="overflow-hidden">
                 <div className="text-sm font-semibold text-white truncate">

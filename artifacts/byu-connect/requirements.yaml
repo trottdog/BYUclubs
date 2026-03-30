@@ -27,6 +27,21 @@ images:
   - path: "artifacts/byu-connect/public/images/pre-med-study-session.png"
     description: "Campus atrium with international flags, club-fair style table and students; used as Pre-Med Study Session event cover"
     aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/resume-workshop-cs-majors.png"
+    description: "Hand with pen on a resume template on a desk with red glasses; use for Resume Workshop for CS Majors event cover"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/ballroom-dancing.png"
+    description: "Formal ballroom couple in performance; shared cover for Ballroom Dance Social, Modern Waltz Masterclass, and Tango Beginners Workshop"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/y-mountain-hiking.png"
+    description: "Y Mountain above Provo; shared cover for Rock Canyon hike, Timpanogos Cave trip, and mountain bike clinic events"
+    aspect_ratio: "16:9"
+  - path: "artifacts/byu-connect/public/images/default-profile-avatar.png"
+    description: "Grey default user silhouette placeholder; used in sidebar and profile until custom avatars exist"
+    aspect_ratio: "1:1"
+  - path: "artifacts/byu-connect/public/images/default-club-avatar.png"
+    description: "Official BYU Y oval logo on blue; default club avatar on cards and club detail until per-club logos exist"
+    aspect_ratio: "1:1"
 
 notes:
   - Using session-based authentication from /api/auth/me

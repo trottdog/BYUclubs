@@ -491,6 +491,26 @@ UPDATE events
 SET cover_image_url = '/images/pre-med-study-session.png'
 WHERE title = 'Pre-Med Study Session';
 
+UPDATE events
+SET cover_image_url = '/images/resume-workshop-cs-majors.png'
+WHERE title = 'Resume Workshop for CS Majors';
+
+UPDATE events
+SET cover_image_url = '/images/ballroom-dancing.png'
+WHERE title IN (
+  'Ballroom Dance Social',
+  'Modern Waltz Masterclass',
+  'Tango Beginners Workshop'
+);
+
+UPDATE events
+SET cover_image_url = '/images/y-mountain-hiking.png'
+WHERE title IN (
+  'BYU Trails: Rock Canyon Hike',
+  'Timpanogos Cave Day Trip',
+  'Mountain Bike Skills Clinic'
+);
+
 
 -- Announcements  (10 club announcements)
 INSERT INTO announcements (club_id, title, body) VALUES

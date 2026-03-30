@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EventCard } from "@/components/event-card";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_CLUB_AVATAR_URL } from "@/lib/avatars";
 
 export default function ClubDetailPage({
   routeParams,
@@ -181,11 +182,8 @@ export default function ClubDetailPage({
           <div className="flex flex-col gap-6 -mt-10 sm:-mt-14 md:-mt-[4.5rem]">
             <div className="flex flex-col gap-5">
               <div className="flex items-start gap-4 sm:gap-6">
-                <div
-                  className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-extrabold text-white border-4 border-card shadow-md shrink-0"
-                  style={{ backgroundColor: club.avatarColor }}
-                >
-                  {club.avatarInitials}
+                <div className="h-24 w-24 sm:h-28 sm:w-28 md:h-36 md:w-36 shrink-0 overflow-hidden rounded-full border-4 border-card bg-white p-2 shadow-md sm:p-2.5 md:p-3">
+                  <img src={DEFAULT_CLUB_AVATAR_URL} alt="" className="h-full w-full object-contain" />
                 </div>
               </div>
 

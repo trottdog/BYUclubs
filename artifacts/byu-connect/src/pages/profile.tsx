@@ -5,6 +5,7 @@ import { useGetUserProfile } from "@workspace/api-client-react";
 import { EventCard } from "@/components/event-card";
 import { Bookmark, CalendarCheck, History, LogOut, Loader2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_USER_AVATAR_URL } from "@/lib/avatars";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, logout } = useAuth();
@@ -98,9 +99,12 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 overflow-x-hidden pb-24 md:pb-12">
       <div className="connect-card relative flex flex-col items-center gap-6 overflow-hidden border-2 border-border p-6 md:flex-row md:items-start md:p-10">
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center border-2 border-primary bg-primary text-3xl font-bold text-white md:h-32 md:w-32 md:text-4xl">
-          {user.firstName[0]}
-          {user.lastName[0]}
+        <div className="flex h-24 w-24 shrink-0 overflow-hidden border-2 border-primary bg-muted md:h-32 md:w-32">
+          <img
+            src={DEFAULT_USER_AVATAR_URL}
+            alt=""
+            className="h-full w-full object-cover"
+          />
         </div>
 
         <div className="flex-1 pt-2 text-center md:text-left">
