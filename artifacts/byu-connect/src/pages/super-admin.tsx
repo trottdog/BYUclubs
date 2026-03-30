@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
-import { ShieldCheck, Trash2, UserPlus } from "lucide-react";
+import { useGetBuildings, useGetCategories, useGetClubs } from "@workspace/api-client-react";
+import { ShieldCheck, Trash2, UserPlus, CalendarPlus } from "lucide-react";
 
 type AdminUser = {
   userId: number;
@@ -25,6 +26,26 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true);
   const [newAdminEmails, setNewAdminEmails] = useState<Record<number, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [eventBusy, setEventBusy] = useState(false);
+  const [eventTargetId, setEventTargetId] = useState("");
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    clubId: "",
+    categoryId: "",
+    buildingId: "",
+    roomNumber: "",
+    startTime: "",
+    endTime: "",
+    capacity: "50",
+    hasFood: false,
+    tags: "",
+    coverImageUrl: "",
+  });
+
+  const { data: buildings } = useGetBuildings();
+  const { data: categories } = useGetCategories();
+  const { data: allClubs } = useGetClubs(undefined, { query: { enabled: isSuperAdmin } });
 
   const superAdminEmailSet = useMemo(
     () => new Set(["byu_admin@byu.edu", "gunnjake@byu.edu"]),
@@ -91,6 +112,192 @@ export default function SuperAdminPage() {
     }
   };
 
+  const createEventDirect = async () => {
+    setError(null);
+    const clubId = parseInt(eventForm.clubId, 10);
+    const categoryId = parseInt(eventForm.categoryId, 10);
+    const buildingId = parseInt(eventForm.buildingId, 10);
+    const capacity = parseInt(eventForm.capacity, 10);
+    const title = eventForm.title.trim();
+    const description = eventForm.description.trim();
+    const roomNumber = eventForm.roomNumber.trim();
+    if (!title || !description) {
+      setError("Title and description are required.");
+      return;
+    }
+    if (!Number.isInteger(clubId) || !Number.isInteger(categoryId) || !Number.isInteger(buildingId)) {
+      setError("Select a club, category, and building.");
+      return;
+    }
+    if (!roomNumber) {
+      setError("Room number is required.");
+      return;
+    }
+    if (!eventForm.startTime || !eventForm.endTime) {
+      setError("Start and end time are required.");
+      return;
+    }
+    const start = new Date(eventForm.startTime);
+    const end = new Date(eventForm.endTime);
+    if (start >= end) {
+      setError("End time must be after start time.");
+      return;
+    }
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      setError("Capacity must be a positive integer.");
+      return;
+    }
+
+    const tags = eventForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    setEventBusy(true);
+    try {
+      const res = await fetch("/api/super-admin-create-event", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+          buildingId,
+          roomNumber,
+          categoryId,
+          clubId,
+          capacity,
+          hasFood: eventForm.hasFood,
+          tags,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || "Failed to create event.");
+      const id = body?.id;
+      if (typeof id === "number") {
+        navigate(`/events/${id}`);
+      }
+    } catch (err: any) {
+      setError(err?.message || "Unable to create event.");
+    } finally {
+      setEventBusy(false);
+    }
+  };
+
+  const loadEventForEdit = async () => {
+    setError(null);
+    const id = parseInt(eventTargetId.trim(), 10);
+    if (!Number.isInteger(id) || id < 1) {
+      setError("Enter a valid event ID to load.");
+      return;
+    }
+    setEventBusy(true);
+    try {
+      const res = await fetch(`/api/events/${id}`, { credentials: "include" });
+      const ev = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(ev?.error || "Failed to load event.");
+      const toLocal = (iso: string) => {
+        try {
+          return new Date(iso).toISOString().slice(0, 16);
+        } catch {
+          return "";
+        }
+      };
+      setEventForm({
+        title: String(ev.title ?? ""),
+        description: String(ev.description ?? ""),
+        clubId: String(ev.clubId ?? ""),
+        categoryId: String(ev.categoryId ?? ""),
+        buildingId: String(ev.buildingId ?? ""),
+        roomNumber: String(ev.roomNumber ?? ""),
+        startTime: ev.startTime ? toLocal(ev.startTime) : "",
+        endTime: ev.endTime ? toLocal(ev.endTime) : "",
+        capacity: String(ev.capacity ?? "50"),
+        hasFood: Boolean(ev.hasFood),
+        tags: Array.isArray(ev.tags) ? ev.tags.join(", ") : "",
+        coverImageUrl: ev.coverImageUrl != null ? String(ev.coverImageUrl) : "",
+      });
+      setEventTargetId(String(id));
+    } catch (err: any) {
+      setError(err?.message || "Unable to load event.");
+    } finally {
+      setEventBusy(false);
+    }
+  };
+
+  const updateEventDirect = async () => {
+    setError(null);
+    const id = parseInt(eventTargetId.trim(), 10);
+    if (!Number.isInteger(id) || id < 1) {
+      setError("Load an event first or enter its ID.");
+      return;
+    }
+    const clubId = parseInt(eventForm.clubId, 10);
+    const categoryId = parseInt(eventForm.categoryId, 10);
+    const buildingId = parseInt(eventForm.buildingId, 10);
+    const capacity = parseInt(eventForm.capacity, 10);
+    const title = eventForm.title.trim();
+    const description = eventForm.description.trim();
+    const roomNumber = eventForm.roomNumber.trim();
+    if (!title || !description) {
+      setError("Title and description are required.");
+      return;
+    }
+    if (!Number.isInteger(clubId) || !Number.isInteger(categoryId) || !Number.isInteger(buildingId)) {
+      setError("Select a club, category, and building.");
+      return;
+    }
+    if (!roomNumber) {
+      setError("Room number is required.");
+      return;
+    }
+    if (!eventForm.startTime || !eventForm.endTime) {
+      setError("Start and end time are required.");
+      return;
+    }
+    const start = new Date(eventForm.startTime);
+    const end = new Date(eventForm.endTime);
+    if (start >= end) {
+      setError("End time must be after start time.");
+      return;
+    }
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      setError("Capacity must be a positive integer.");
+      return;
+    }
+
+    const tags = eventForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    const coverTrim = eventForm.coverImageUrl.trim();
+    setEventBusy(true);
+    try {
+      const res = await fetch("/api/super-admin-update-event", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          title,
+          description,
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+          buildingId,
+          roomNumber,
+          categoryId,
+          clubId,
+          capacity,
+          hasFood: eventForm.hasFood,
+          tags,
+          coverImageUrl: coverTrim.length ? coverTrim : null,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || "Failed to update event.");
+      navigate(`/events/${id}`);
+    } catch (err: any) {
+      setError(err?.message || "Unable to update event.");
+    } finally {
+      setEventBusy(false);
+    }
+  };
+
   const removeAdmin = async (clubId: number, userId: number) => {
     setError(null);
     try {
@@ -143,6 +350,172 @@ export default function SuperAdminPage() {
           {error}
         </div>
       )}
+
+      <div className="rounded-2xl border bg-card p-5 md:p-6 shadow-sm">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <CalendarPlus className="w-5 h-5 text-primary" />
+          Create / edit event (direct SQL)
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">
+          Super-admin only. Uses parameterized <code className="text-xs">INSERT</code> and <code className="text-xs">UPDATE</code>{" "}
+          statements against the database (not the standard create/patch handlers).
+        </p>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <input
+            type="number"
+            min={1}
+            value={eventTargetId}
+            onChange={(e) => setEventTargetId(e.target.value)}
+            placeholder="Event ID (for load / update)"
+            className="w-full rounded-lg border bg-background px-3 py-2 text-sm sm:w-40"
+          />
+          <button
+            type="button"
+            onClick={loadEventForEdit}
+            disabled={eventBusy}
+            className="rounded-lg border border-border bg-muted px-3 py-2 text-sm font-bold hover:bg-muted/80 disabled:opacity-70"
+          >
+            Load
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEventTargetId("");
+              setEventForm({
+                title: "",
+                description: "",
+                clubId: "",
+                categoryId: "",
+                buildingId: "",
+                roomNumber: "",
+                startTime: "",
+                endTime: "",
+                capacity: "50",
+                hasFood: false,
+                tags: "",
+                coverImageUrl: "",
+              });
+            }}
+            disabled={eventBusy}
+            className="rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground disabled:opacity-70"
+          >
+            Clear form
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input
+            value={eventForm.title}
+            onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="Title"
+            className="rounded-lg border bg-background px-3 py-2 text-sm md:col-span-2"
+          />
+          <textarea
+            value={eventForm.description}
+            onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
+            placeholder="Description"
+            className="rounded-lg border bg-background px-3 py-2 text-sm min-h-24 md:col-span-2"
+          />
+          <select
+            value={eventForm.clubId}
+            onChange={(e) => setEventForm((f) => ({ ...f, clubId: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Host club</option>
+            {allClubs?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={eventForm.categoryId}
+            onChange={(e) => setEventForm((f) => ({ ...f, categoryId: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Category</option>
+            {categories?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={eventForm.buildingId}
+            onChange={(e) => setEventForm((f) => ({ ...f, buildingId: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm md:col-span-2"
+          >
+            <option value="">Building</option>
+            {buildings?.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name} ({b.abbreviation})
+              </option>
+            ))}
+          </select>
+          <input
+            value={eventForm.roomNumber}
+            onChange={(e) => setEventForm((f) => ({ ...f, roomNumber: e.target.value }))}
+            placeholder="Room"
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            min={1}
+            value={eventForm.capacity}
+            onChange={(e) => setEventForm((f) => ({ ...f, capacity: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            type="datetime-local"
+            value={eventForm.startTime}
+            onChange={(e) => setEventForm((f) => ({ ...f, startTime: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            type="datetime-local"
+            value={eventForm.endTime}
+            onChange={(e) => setEventForm((f) => ({ ...f, endTime: e.target.value }))}
+            className="rounded-lg border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            value={eventForm.coverImageUrl}
+            onChange={(e) => setEventForm((f) => ({ ...f, coverImageUrl: e.target.value }))}
+            placeholder="Cover image URL (optional)"
+            className="rounded-lg border bg-background px-3 py-2 text-sm md:col-span-2"
+          />
+          <input
+            value={eventForm.tags}
+            onChange={(e) => setEventForm((f) => ({ ...f, tags: e.target.value }))}
+            placeholder="Tags (comma-separated)"
+            className="rounded-lg border bg-background px-3 py-2 text-sm md:col-span-2"
+          />
+          <label className="flex items-center gap-2 text-sm font-medium md:col-span-2">
+            <input
+              type="checkbox"
+              checked={eventForm.hasFood}
+              onChange={(e) => setEventForm((f) => ({ ...f, hasFood: e.target.checked }))}
+            />
+            Food provided
+          </label>
+          <div className="md:col-span-2 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={createEventDirect}
+              disabled={eventBusy}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+            >
+              {eventBusy ? "Working…" : "Create event"}
+            </button>
+            <button
+              type="button"
+              onClick={updateEventDirect}
+              disabled={eventBusy}
+              className="rounded-lg border-2 border-primary bg-background px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 disabled:opacity-70"
+            >
+              Update event (SQL)
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {clubs.map((club) => (

@@ -99,9 +99,7 @@ export default function EventDetailPage({
       })
       .then((data) => {
         if (mounted) {
-          const allowed = Boolean(data?.canManage);
-          setCanManage(allowed);
-          if (allowed) setIsEditMode(true);
+          setCanManage(Boolean(data?.canManage));
         }
       })
       .catch(() => {
@@ -305,6 +303,31 @@ export default function EventDetailPage({
               <p className="text-sm text-muted-foreground">
                 You can edit this event, review who has reserved a spot, or delete it entirely.
               </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditMode((v) => !v)}
+                  disabled={isSaving || isDeleting}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition-colors disabled:opacity-70",
+                    isEditMode
+                      ? "border-border bg-muted text-foreground hover:bg-muted/80"
+                      : "border-primary bg-primary text-white hover:bg-primary/90",
+                  )}
+                >
+                  <PencilLine className="h-4 w-4" />
+                  {isEditMode ? "Close editor" : "Edit details"}
+                </button>
+                <button
+                  type="button"
+                  onClick={deleteEvent}
+                  disabled={isSaving || isDeleting}
+                  className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive hover:text-white disabled:opacity-70"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? "Deleting..." : "Delete event"}
+                </button>
+              </div>
               {isEditMode && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input
@@ -396,23 +419,14 @@ export default function EventDetailPage({
                     Food provided
                   </label>
                   <div className="md:col-span-2">
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={saveEventChanges}
-                        disabled={isSaving || isDeleting}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
-                      >
-                        {isSaving ? "Saving..." : "Save event changes"}
-                      </button>
-                      <button
-                        onClick={deleteEvent}
-                        disabled={isSaving || isDeleting}
-                        className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive hover:text-white disabled:opacity-70"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {isDeleting ? "Deleting..." : "Delete event"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={saveEventChanges}
+                      disabled={isSaving || isDeleting}
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
+                    >
+                      {isSaving ? "Saving..." : "Save event changes"}
+                    </button>
                   </div>
                 </div>
               )}

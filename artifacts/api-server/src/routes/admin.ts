@@ -1,7 +1,16 @@
 // @ts-nocheck
 import { Router } from "express";
 import { and, eq, sql } from "drizzle-orm";
-import { db, clubsTable, clubMembershipsTable, usersTable } from "@workspace/db";
+import {
+  db,
+  clubsTable,
+  clubMembershipsTable,
+  usersTable,
+  buildingsTable,
+  categoriesTable,
+  eventsTable,
+} from "@workspace/db";
+import { CreateEventBody } from "@workspace/api-zod";
 import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router = Router();
@@ -235,6 +244,249 @@ router.delete("/admin/clubs/:id/admins/:userId", async (req, res): Promise<void>
 /** DELETE query: clubId, userId — single-path alias for Vercel. */
 router.delete("/super-admin-remove-club-admin", async (req, res): Promise<void> => {
   await handleRemoveClubAdmin(req, res, null, null);
+});
+
+/**
+ * Super-admin only: insert an event with a direct SQL statement (not Drizzle insert builder).
+ */
+router.post("/super-admin-create-event", async (req, res): Promise<void> => {
+  const userId = await requireSuperAdmin(req, res);
+  if (userId == null) return;
+
+  const parsed = CreateEventBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const {
+    title,
+    description,
+    startTime,
+    endTime,
+    buildingId,
+    roomNumber,
+    categoryId,
+    clubId,
+    capacity,
+    hasFood,
+    tags,
+  } = parsed.data;
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start.getTime() >= end.getTime()) {
+    res.status(400).json({ error: "Invalid start or end time." });
+    return;
+  }
+
+  const [[building], [category], [club]] = await Promise.all([
+    db.select({ id: buildingsTable.id }).from(buildingsTable).where(eq(buildingsTable.id, buildingId)).limit(1),
+    db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.id, categoryId)).limit(1),
+    db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, clubId)).limit(1),
+  ]);
+
+  if (!building || !category || !club) {
+    res.status(400).json({ error: "Invalid buildingId, categoryId, or clubId." });
+    return;
+  }
+
+  const tagsSql =
+    tags.length > 0
+      ? sql`ARRAY[${sql.join(
+          tags.map((t) => sql`${t}`),
+          sql`, `,
+        )}]::text[]`
+      : sql`ARRAY[]::text[]`;
+
+  try {
+    const inserted = await db.execute(sql`
+      insert into events (
+        title, description, start_time, end_time, building_id, room_number,
+        category_id, club_id, capacity, has_food, tags, created_by_user_id
+      ) values (
+        ${title},
+        ${description},
+        ${start.toISOString()}::timestamptz,
+        ${end.toISOString()}::timestamptz,
+        ${buildingId},
+        ${roomNumber},
+        ${categoryId},
+        ${clubId},
+        ${capacity},
+        ${hasFood},
+        ${tagsSql},
+        ${userId}
+      )
+      returning id
+    `);
+    const id = Number((inserted.rows?.[0] as { id: unknown })?.id);
+    res.status(201).json({ id, message: "Event inserted." });
+  } catch (err: any) {
+    if (err?.code === "42703") {
+      const inserted = await db.execute(sql`
+        insert into events (
+          title, description, start_time, end_time, building_id, room_number,
+          category_id, club_id, capacity, has_food, tags
+        ) values (
+          ${title},
+          ${description},
+          ${start.toISOString()}::timestamptz,
+          ${end.toISOString()}::timestamptz,
+          ${buildingId},
+          ${roomNumber},
+          ${categoryId},
+          ${clubId},
+          ${capacity},
+          ${hasFood},
+          ${tagsSql}
+        )
+        returning id
+      `);
+      const id = Number((inserted.rows?.[0] as { id: unknown })?.id);
+      res.status(201).json({ id, message: "Event inserted (schema without created_by_user_id)." });
+      return;
+    }
+    throw err;
+  }
+});
+
+/**
+ * Super-admin only: update an event with a direct SQL UPDATE (parameterized).
+ */
+router.patch("/super-admin-update-event", async (req, res): Promise<void> => {
+  const userId = await requireSuperAdmin(req, res);
+  if (userId == null) return;
+
+  const raw = req.body ?? {};
+  const eventId = parseInt(String(raw.id ?? ""), 10);
+  if (!Number.isInteger(eventId) || eventId < 1) {
+    res.status(400).json({ error: "Valid event id is required." });
+    return;
+  }
+
+  const coverRaw = raw.coverImageUrl;
+  const coverImageUrl =
+    coverRaw === undefined || coverRaw === null ? null : String(coverRaw).trim() || null;
+
+  const parsed = CreateEventBody.safeParse({
+    title: raw.title,
+    description: raw.description,
+    startTime: raw.startTime,
+    endTime: raw.endTime,
+    buildingId: raw.buildingId,
+    roomNumber: raw.roomNumber,
+    categoryId: raw.categoryId,
+    clubId: raw.clubId,
+    capacity: raw.capacity,
+    hasFood: raw.hasFood,
+    tags: raw.tags,
+  });
+
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const {
+    title,
+    description,
+    startTime,
+    endTime,
+    buildingId,
+    roomNumber,
+    categoryId,
+    clubId,
+    capacity,
+    hasFood,
+    tags,
+  } = parsed.data;
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start.getTime() >= end.getTime()) {
+    res.status(400).json({ error: "Invalid start or end time." });
+    return;
+  }
+
+  const [existing] = await db
+    .select({ id: eventsTable.id })
+    .from(eventsTable)
+    .where(eq(eventsTable.id, eventId))
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json({ error: "Event not found." });
+    return;
+  }
+
+  const [[building], [category], [club]] = await Promise.all([
+    db.select({ id: buildingsTable.id }).from(buildingsTable).where(eq(buildingsTable.id, buildingId)).limit(1),
+    db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.id, categoryId)).limit(1),
+    db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, clubId)).limit(1),
+  ]);
+
+  if (!building || !category || !club) {
+    res.status(400).json({ error: "Invalid buildingId, categoryId, or clubId." });
+    return;
+  }
+
+  const tagsSql =
+    tags.length > 0
+      ? sql`ARRAY[${sql.join(
+          tags.map((t) => sql`${t}`),
+          sql`, `,
+        )}]::text[]`
+      : sql`ARRAY[]::text[]`;
+
+  const runWithCover = async () => {
+    await db.execute(sql`
+      update events set
+        title = ${title},
+        description = ${description},
+        start_time = ${start.toISOString()}::timestamptz,
+        end_time = ${end.toISOString()}::timestamptz,
+        building_id = ${buildingId},
+        room_number = ${roomNumber},
+        category_id = ${categoryId},
+        club_id = ${clubId},
+        capacity = ${capacity},
+        has_food = ${hasFood},
+        tags = ${tagsSql},
+        cover_image_url = ${coverImageUrl}
+      where id = ${eventId}
+    `);
+  };
+
+  const runWithoutCover = async () => {
+    await db.execute(sql`
+      update events set
+        title = ${title},
+        description = ${description},
+        start_time = ${start.toISOString()}::timestamptz,
+        end_time = ${end.toISOString()}::timestamptz,
+        building_id = ${buildingId},
+        room_number = ${roomNumber},
+        category_id = ${categoryId},
+        club_id = ${clubId},
+        capacity = ${capacity},
+        has_food = ${hasFood},
+        tags = ${tagsSql}
+      where id = ${eventId}
+    `);
+  };
+
+  try {
+    await runWithCover();
+  } catch (err: any) {
+    if (err?.code === "42703") {
+      await runWithoutCover();
+    } else {
+      throw err;
+    }
+  }
+
+  res.json({ id: eventId, message: "Event updated." });
 });
 
 export default router;

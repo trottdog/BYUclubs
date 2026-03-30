@@ -28,6 +28,19 @@ function getAdminEmailSet(): Set<string> {
   return new Set(source.map((email) => email.trim().toLowerCase()).filter(Boolean));
 }
 
+const DEFAULT_SUPER_ADMIN_EMAILS = ["byu_admin@byu.edu", "gunnjake@byu.edu"];
+
+function getSuperAdminEmailSet(): Set<string> {
+  const configured = process.env.SUPER_ADMIN_EMAILS?.trim();
+  const source = configured?.length ? configured.split(",") : DEFAULT_SUPER_ADMIN_EMAILS;
+  return new Set(source.map((email) => email.trim().toLowerCase()).filter(Boolean));
+}
+
+async function isSuperAdminUser(userId: number): Promise<boolean> {
+  const email = await getUserEmail(userId);
+  return email != null && getSuperAdminEmailSet().has(email);
+}
+
 async function getUserEmail(userId: number): Promise<string | null> {
   const [user] = await db
     .select({ email: usersTable.email })
@@ -327,7 +340,10 @@ async function handleEventCanManage(req: any, res: any, id: number): Promise<voi
     return;
   }
 
-  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
+  const allowed =
+    event.createdByUserId === userId ||
+    (await canManageClub(userId, event.clubId)) ||
+    (await isSuperAdminUser(userId));
   res.json({ canManage: allowed });
 }
 
@@ -362,7 +378,10 @@ async function handleEventAttendees(req: any, res: any, id: number): Promise<voi
     return;
   }
 
-  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
+  const allowed =
+    event.createdByUserId === userId ||
+    (await canManageClub(userId, event.clubId)) ||
+    (await isSuperAdminUser(userId));
   if (!allowed) {
     res.status(403).json({ error: "You do not have permission to view attendees for this event." });
     return;
@@ -456,7 +475,8 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
 
   const allowed =
     existingEvent.createdByUserId === userId ||
-    (await canManageClub(userId, existingEvent.clubId));
+    (await canManageClub(userId, existingEvent.clubId)) ||
+    (await isSuperAdminUser(userId));
   if (!allowed) {
     res.status(403).json({ error: "You do not have permission to edit this event." });
     return;
@@ -558,7 +578,8 @@ router.patch("/events/:id", async (req, res): Promise<void> => {
       res.status(400).json({ error: "Invalid clubId." });
       return;
     }
-    const canManageTargetClub = await canManageClub(userId, input.clubId);
+    const canManageTargetClub =
+      (await canManageClub(userId, input.clubId)) || (await isSuperAdminUser(userId));
     if (!canManageTargetClub) {
       res.status(403).json({ error: "You do not have permission to move this event to that club." });
       return;
@@ -607,7 +628,10 @@ router.delete("/events/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const allowed = event.createdByUserId === userId || (await canManageClub(userId, event.clubId));
+  const allowed =
+    event.createdByUserId === userId ||
+    (await canManageClub(userId, event.clubId)) ||
+    (await isSuperAdminUser(userId));
   if (!allowed) {
     res.status(403).json({ error: "You do not have permission to delete this event." });
     return;
