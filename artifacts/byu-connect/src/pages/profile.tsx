@@ -92,6 +92,8 @@ export default function ProfilePage() {
 
   const pastEvents = (profile?.pastParticipatedEvents ?? []).slice(0, 8);
   const createdClubs = profile?.createdClubs ?? [];
+  const reservationEvents = profile?.reservations ?? [];
+  const reservationsCount = reservationEvents.length;
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 pb-24 md:pb-12 overflow-x-hidden">
@@ -103,6 +105,17 @@ export default function ProfilePage() {
         <div className="flex-1 text-center md:text-left pt-2">
           <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">{user.firstName} {user.lastName}</h2>
           <p className="text-muted-foreground font-medium">{user.email}</p>
+          <p className="mt-2 text-sm text-foreground/90 whitespace-pre-wrap break-words">
+            <span className="font-semibold">Bio:</span> {activeBio || "Add a short bio to tell others about yourself."}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setIsEditingBio(true)}
+            className="mt-2 text-sm font-semibold text-primary hover:underline"
+          >
+            Edit Bio
+          </button>
 
           <div className="mt-3 mb-6 max-w-xl">
             {isEditingBio ? (
@@ -140,20 +153,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
-                  {activeBio || "Add a short bio to tell others about yourself."}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBio(true)}
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  {activeBio ? "Edit bio" : "Add bio"}
-                </button>
-              </div>
-            )}
+            ) : null}
           </div>
           
           {profileLoading ? (
@@ -176,7 +176,7 @@ export default function ProfilePage() {
                   <CalendarCheck className="w-4 h-4 text-[#22c55e]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-foreground">Reservations</span>
                 </div>
-                <p className="text-3xl font-extrabold text-foreground">{profile?.reservationsCount || 0}</p>
+                <p className="text-3xl font-extrabold text-foreground">{reservationsCount}</p>
               </div>
             </div>
           )}
@@ -198,14 +198,14 @@ export default function ProfilePage() {
         <div className="space-y-12">
           <section>
             <h3 className="text-2xl font-extrabold flex items-center gap-2 mb-6 text-foreground border-b pb-3">
-              <History className="w-6 h-6 text-[#0ea5e9]" /> Past Participated Events
+              <History className="w-6 h-6 text-[#0ea5e9]" /> Participated Events
             </h3>
 
             {!pastEvents.length ? (
               <div className="bg-card rounded-2xl border border-dashed p-10 text-center">
                 <History className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium text-lg">No past participated events yet.</p>
-                <p className="text-sm mt-1">Events you attended will appear here after they end.</p>
+                <p className="text-muted-foreground font-medium text-lg">No participated events yet.</p>
+                <p className="text-sm mt-1">Events you attended will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -242,18 +242,18 @@ export default function ProfilePage() {
 
           <section>
             <h3 className="text-2xl font-extrabold flex items-center gap-2 mb-6 text-foreground border-b pb-3">
-              <CalendarCheck className="w-6 h-6 text-[#22c55e]" /> My Reservations
+              <CalendarCheck className="w-6 h-6 text-[#22c55e]" /> Reserved Events
             </h3>
             
-            {!profile.reservations || profile.reservations.length === 0 ? (
+            {!reservationEvents.length ? (
               <div className="bg-card rounded-2xl border border-dashed p-10 text-center">
                 <CalendarCheck className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium text-lg">No reservations yet.</p>
+                <p className="text-muted-foreground font-medium text-lg">No reserved events yet.</p>
                 <p className="text-sm mt-1">Spots you reserve will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {profile.reservations.map(ev => <EventCard key={ev.id} event={ev} compact />)}
+                {reservationEvents.map(ev => <EventCard key={ev.id} event={ev} compact />)}
               </div>
             )}
           </section>
