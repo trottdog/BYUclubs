@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { useGetUserProfile } from "@workspace/api-client-react";
+import { useGetEvents, useGetUserProfile } from "@workspace/api-client-react";
 import { EventCard } from "@/components/event-card";
 import { Bookmark, CalendarCheck, History, LogOut, Loader2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -33,11 +33,23 @@ export default function ProfilePage() {
     },
   });
 
+  const { data: allEvents, isLoading: eventsLoading, refetch: refetchEvents } = useGetEvents(undefined, {
+    query: {
+      enabled: !!user,
+      staleTime: 0,
+      refetchOnMount: "always",
+    },
+    request: {
+      cache: "no-store",
+    },
+  });
+
   useEffect(() => {
     if (user) {
       void refetch();
+      void refetchEvents();
     }
-  }, [user, refetch]);
+  }, [user, refetch, refetchEvents]);
 
   const getBioStorageKey = (userId: number) => `byuconnect:profile-bio:${userId}`;
 
@@ -102,10 +114,15 @@ export default function ProfilePage() {
     }
   };
 
-  const pastEvents = (profile?.pastParticipatedEvents ?? []).slice(0, 8);
+  const savedEvents = (allEvents ?? []).filter((event) => event.isSaved);
+  const reservationEvents = (allEvents ?? []).filter((event) => event.isReserved);
+  const pastEvents = reservationEvents
+    .filter((event) => new Date(event.endTime).getTime() < Date.now())
+    .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
+    .slice(0, 8);
   const createdClubs = profile?.createdClubs ?? [];
-  const reservationEvents = profile?.reservations ?? [];
-  const reservationsCount = profile?.reservationsCount ?? reservationEvents.length;
+  const savedCount = savedEvents.length;
+  const reservationsCount = reservationEvents.length;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 overflow-x-hidden pb-24 md:pb-12">
@@ -176,7 +193,7 @@ export default function ProfilePage() {
             ) : null}
           </div>
 
-          {profileLoading ? (
+          {profileLoading || eventsLoading ? (
             <div className="mt-6 flex items-center justify-center gap-4 md:justify-start">
               <div className="h-20 w-32 animate-pulse bg-muted" />
               <div className="h-20 w-32 animate-pulse bg-muted" />
@@ -188,7 +205,7 @@ export default function ProfilePage() {
                   <Bookmark className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">Saved</span>
                 </div>
-                <p className="text-3xl font-bold text-foreground">{profile?.savedCount ?? 0}</p>
+                <p className="text-3xl font-bold text-foreground">{savedCount}</p>
               </div>
 
               <div className="connect-panel flex min-w-[140px] flex-col items-center border-2 bg-white md:items-start">
@@ -211,12 +228,12 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {profileLoading ? (
+      {profileLoading || eventsLoading ? (
         <div className="flex h-64 w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        profile && (
+        (
           <div className="space-y-12">
             <section>
               <div className="mb-6 flex items-end gap-3 border-b-4 border-primary pb-4">
@@ -318,7 +335,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {!profile.savedEvents || profile.savedEvents.length === 0 ? (
+              {savedEvents.length === 0 ? (
                 <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
                   <Bookmark className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
                   <p className="font-semibold text-muted-foreground">No saved events.</p>
@@ -326,7 +343,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  {profile.savedEvents.map((ev) => (
+                  {savedEvents.map((ev) => (
                     <EventCard key={ev.id} event={ev} compact />
                   ))}
                 </div>
