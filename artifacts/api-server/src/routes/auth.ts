@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
 import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie.js";
@@ -55,8 +55,15 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       return;
     }
 
-    const { password, firstName, lastName } = parsed.data;
+    const { password, firstName: rawFirst, lastName: rawLast } = parsed.data;
+    const firstName = rawFirst.trim();
+    const lastName = rawLast.trim();
     const email = normalizeEmail(parsed.data.email);
+
+    if (!firstName || !lastName) {
+      res.status(400).json({ error: "First and last name are required." });
+      return;
+    }
 
     if (!email.endsWith("@byu.edu")) {
       res.status(400).json({ error: "Only BYU email addresses (@byu.edu) are allowed." });
@@ -73,18 +80,19 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await db.execute(sql`
-      insert into users (email, password_hash, first_name, last_name)
-      values (${email}, ${passwordHash}, ${firstName}, ${lastName})
-    `);
 
     const [user] = await db
-      .select(publicUserColumns)
-      .from(usersTable)
-      .where(eq(usersTable.email, email));
+      .insert(usersTable)
+      .values({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+      })
+      .returning(publicUserColumns);
 
     if (!user) {
-      res.status(500).json({ error: "Registration failed", detail: "Created user could not be loaded." });
+      res.status(500).json({ error: "Registration failed", detail: "Could not create user." });
       return;
     }
 

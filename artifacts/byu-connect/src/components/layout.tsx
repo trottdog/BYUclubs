@@ -17,7 +17,8 @@ const navItems = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const isAuthPage = location === "/auth";
+  const pathOnly = location.split("?")[0].replace(/\/$/, "") || "/";
+  const isAuthPage = pathOnly === "/auth";
   const { user } = useAuth();
   const { data: events } = useGetEvents();
   const { data: clubs } = useGetClubs();

@@ -31,7 +31,10 @@ export function getAuthUserId(req: Request): number | null {
 }
 
 export function setAuthSession(res: any, userId: number): void {
-  res.cookie(AUTH_COOKIE_NAME, String(userId), getCookieOptions());
+  res.cookie(AUTH_COOKIE_NAME, String(userId), {
+    ...getCookieOptions(),
+    signed: true,
+  });
 }
 
 export function clearAuthSession(res: any): void {

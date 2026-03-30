@@ -6,7 +6,8 @@ interface AuthContextType {
   isLoading: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
+  /** Create a new account (named signUp to avoid confusion with react-hook-form’s register). */
+  signUp: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -44,11 +45,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   };
 
-  const register = async (data: RegisterRequest) => {
+  const signUp = async (data: RegisterRequest) => {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+      }),
       credentials: "include",
     });
     if (!res.ok) {
@@ -68,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, setUser, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, setUser, login, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );
