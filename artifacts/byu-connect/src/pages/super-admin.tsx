@@ -354,11 +354,10 @@ export default function SuperAdminPage() {
       <div className="rounded-2xl border bg-card p-5 md:p-6 shadow-sm">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <CalendarPlus className="w-5 h-5 text-primary" />
-          Create / edit event (direct SQL)
+          Create / edit event
         </h2>
         <p className="text-sm text-muted-foreground mt-1 mb-4">
-          Super-admin only. Uses parameterized <code className="text-xs">INSERT</code> and <code className="text-xs">UPDATE</code>{" "}
-          statements against the database (not the standard create/patch handlers).
+          Super-admin only. Create a new event here, or enter an event ID and load it to edit and save changes.
         </p>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <input
@@ -511,7 +510,7 @@ export default function SuperAdminPage() {
               disabled={eventBusy}
               className="rounded-lg border-2 border-primary bg-background px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 disabled:opacity-70"
             >
-              Update event (SQL)
+              Update event
             </button>
           </div>
         </div>
