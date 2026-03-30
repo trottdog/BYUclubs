@@ -124,7 +124,7 @@
 
 /* Editorial display utilities (BYU Connect — avoid vendor-themed class names) */
 .connect-display-title {
-  @apply font-sans text-5xl md:text-7xl font-bold leading-[0.96] tracking-tight;
+  @apply font-sans text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-7xl;
 }
 
 .connect-eyebrow {

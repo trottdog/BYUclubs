@@ -164,9 +164,9 @@ export default function DiscoverPage() {
     Number(foodOnly);
 
   return (
-    <div className="w-full flex flex-col gap-8 overflow-x-hidden md:gap-10">
+    <div className="flex w-full max-w-full flex-col gap-6 overflow-x-hidden md:gap-10">
       {/* Official header — LinkedIn-style wide cover (photo stays vivid; gradient only anchors text at bottom) */}
-      <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(36vw,220px)] sm:min-h-[200px] md:min-h-[220px]">
+      <div className="relative w-full max-w-full overflow-hidden rounded-2xl border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(36vw,200px)] sm:min-h-[200px] sm:rounded-[1.75rem] md:min-h-[220px]">
         <img
           src="/images/discover-campus-life.png"
           alt=""
@@ -182,14 +182,14 @@ export default function DiscoverPage() {
           aria-hidden
         />
 
-        <div className="relative z-10 flex min-h-[min(36vw,220px)] flex-col justify-between gap-4 p-5 sm:min-h-[200px] sm:p-6 md:min-h-[220px] md:p-8">
-          <div className="flex items-center gap-4 text-white">
+        <div className="relative z-10 flex min-h-[min(36vw,200px)] flex-col justify-between gap-4 p-4 text-center sm:min-h-[200px] sm:p-6 sm:text-left md:min-h-[220px] md:p-8">
+          <div className="flex items-center justify-center gap-3 text-white sm:justify-start">
             <ShieldCheck className="h-5 w-5 shrink-0 fill-current text-white" />
             <p className="connect-eyebrow !text-white/95">BYU CONNECT</p>
           </div>
 
           <div className="flex flex-col gap-4">
-            <h1 className="connect-display-title text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+            <h1 className="connect-display-title mx-auto max-w-[min(100%,22rem)] text-balance text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] sm:mx-0 sm:max-w-none sm:text-left">
               {timeFilter === "all" ? (
                 <>
                   DISCOVER <span className="text-[color:rgb(147,197,253)]">CAMPUS</span> LIFE
@@ -200,18 +200,18 @@ export default function DiscoverPage() {
                 </span>
               )}
             </h1>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <p className="max-w-lg text-xs font-medium leading-relaxed text-white/85 sm:text-sm">
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <p className="max-w-lg text-xs font-medium leading-relaxed text-white/85 sm:text-left sm:text-sm">
                 {timeFilter === "all"
                   ? "Find events, clubs, and places on campus."
                   : "Showing events for this time window. Use the filter above to switch."}
               </p>
-              <div className="flex shrink-0 gap-6 sm:gap-8">
-                <div className="flex flex-col">
+              <div className="flex shrink-0 justify-center gap-8 sm:justify-end">
+                <div className="flex flex-col items-center sm:items-start">
                   <span className="text-xl font-bold leading-none tracking-tight text-[color:rgb(147,197,253)] sm:text-2xl">Live</span>
                   <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Status</span>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col items-center sm:items-start">
                   <span className="text-xl font-bold leading-none tracking-tight text-white sm:text-2xl">{events?.length ?? 0}</span>
                   <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Events</span>
                 </div>
@@ -222,18 +222,18 @@ export default function DiscoverPage() {
       </div>
 
       {/* Industrial Search & Filter */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md py-3 -mx-8 px-8 border-y border-border">
-        <div className="flex flex-col gap-3">
-          <div className="relative">
-            <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+      <div className="sticky top-16 z-30 w-full max-w-full border-y border-border bg-background/95 py-3 backdrop-blur-md md:top-0 md:-mx-2 md:px-2 lg:mx-0 lg:px-0">
+        <div className="mx-auto flex w-full max-w-full flex-col gap-3 px-0">
+          <div className="relative mx-auto w-full max-w-full">
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-primary sm:left-5" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              placeholder="SEARCH EVENTS, CLUBS & BUILDINGS..."
-              className="connect-search-input"
+              placeholder="Search events, clubs, buildings..."
+              className="connect-search-input !py-3.5 !pl-12 !pr-4 text-left text-sm sm:!py-4 sm:!pl-16 sm:!pr-12"
             />
             
             <AnimatePresence>
@@ -273,7 +273,7 @@ export default function DiscoverPage() {
             </AnimatePresence>
           </div>
 
-          <div className="flex items-center gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-full max-w-full flex-wrap items-center justify-center gap-2 pb-1 sm:justify-start md:flex-nowrap md:gap-4 md:overflow-x-auto md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden">
             <div className="flex shrink-0 items-center rounded-2xl border border-border bg-white p-1">
               <button
                 type="button"
@@ -311,7 +311,7 @@ export default function DiscoverPage() {
             </div>
 
             <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-              <SelectTrigger className="h-10 w-[160px] rounded-2xl border border-border bg-white px-6 text-sm font-medium hover:border-primary text-foreground">
+              <SelectTrigger className="h-10 w-full max-w-[200px] rounded-2xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:border-primary sm:w-[160px] sm:max-w-none sm:px-6">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border border-primary bg-white">
@@ -326,7 +326,7 @@ export default function DiscoverPage() {
             <button
               onClick={() => setFoodOnly((v) => !v)}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-2xl border px-6 text-sm font-medium transition-all",
+                "flex h-10 shrink-0 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-medium transition-all sm:gap-3 sm:px-6",
                 foodOnly ? "bg-primary text-white border-primary" : "border-border bg-white text-muted-foreground hover:border-primary hover:text-primary"
               )}
             >
@@ -337,7 +337,7 @@ export default function DiscoverPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={() => { setTimeFilter("all"); setSelectedCategoryId(null); setFoodOnly(false); }}
-                className="h-10 rounded-2xl border border-destructive/40 px-6 text-destructive text-sm font-medium hover:bg-destructive hover:text-white transition-all"
+                className="h-10 w-full max-w-[200px] rounded-2xl border border-destructive/40 px-4 text-sm font-medium text-destructive transition-all hover:bg-destructive hover:text-white sm:w-auto sm:max-w-none sm:px-6"
               >
                 RESET
               </button>
@@ -365,12 +365,12 @@ export default function DiscoverPage() {
           </div>
         ) : view === "clubs" ? (
           <section>
-            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+            <div className="mb-4 flex flex-col items-center gap-3 border-b border-border pb-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
               <div className="flex flex-col gap-0.5">
                 <p className="connect-eyebrow">COMMUNITY</p>
                 <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Active Clubs</h2>
               </div>
-              <div className="bg-muted border border-border px-6 py-3 text-sm font-medium text-muted-foreground">
+              <div className="bg-muted border border-border px-5 py-2 text-sm font-medium text-muted-foreground sm:px-6 sm:py-3">
                 {filteredClubs.length} CLUBS
               </div>
             </div>

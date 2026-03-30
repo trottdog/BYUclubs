@@ -153,7 +153,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar text-sidebar-foreground flex items-center justify-between px-8 z-50 border-b border-sidebar-border">
+      <div className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground md:hidden">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 bg-white flex items-center justify-center">
             <img src="/images/logo.png" alt="BYU" className="w-full h-full object-contain p-0.5" />
@@ -173,7 +173,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "tween", duration: 0.2 }}
-            className="fixed inset-0 bg-sidebar z-40 flex flex-col pt-24 px-8"
+            className="fixed inset-0 z-40 flex flex-col bg-sidebar px-4 pt-24"
           >
             <nav className="flex-1 space-y-2">
               {visibleNavItems.map((item) => {
@@ -196,12 +196,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-72 pt-16 md:pt-0 min-h-screen">
+      <main className="flex min-h-screen w-full min-w-0 flex-1 justify-center pt-16 md:ml-72 md:pt-0">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="max-w-7xl mx-auto p-8 md:p-16 lg:p-20"
+          className="w-full max-w-7xl mx-auto px-4 pb-10 pt-2 sm:px-6 md:px-12 md:py-16 lg:px-20 lg:py-20"
         >
           {children}
         </motion.div>
