@@ -80,26 +80,34 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const createdAt = new Date();
 
-    const [user] = await db
+    const [row] = await db
       .insert(usersTable)
       .values({
         email,
         passwordHash,
         firstName,
         lastName,
+        createdAt,
       })
-      .returning(publicUserColumns);
+      .returning();
 
-    if (!user) {
+    if (!row) {
       res.status(500).json({ error: "Registration failed", detail: "Could not create user." });
       return;
     }
 
-    setAuthSession(res, user.id);
+    setAuthSession(res, row.id);
 
     res.status(201).json({
-      user: toAuthResponseUser(user),
+      user: toAuthResponseUser({
+        id: row.id,
+        email: row.email,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        createdAt: row.createdAt,
+      }),
     });
   } catch (err: any) {
     if (err?.code === "23505") {

@@ -14,6 +14,12 @@ function ensureExists(path, description) {
 
 const rootDir = process.cwd();
 const outputDir = resolve(rootDir, "dist");
+const apiBundlePath = resolve(rootDir, "artifacts/api-server/dist/app.mjs");
+
+console.log("[vercel-build] Building API (required for /api/* serverless handlers)...");
+run("pnpm --filter @workspace/api-server run build");
+
+ensureExists(apiBundlePath, "api-server app.mjs bundle");
 
 console.log("[vercel-build] Building frontend workspace...");
 run("pnpm --filter @workspace/byu-connect run build");

@@ -16,11 +16,19 @@ const useSsl =
   databaseUrl.includes("sslmode=require") ||
   databaseUrl.includes("supabase.co");
 
-export const pool = new Pool({
-  connectionString: databaseUrl,
-  ssl: useSsl ? { rejectUnauthorized: false } : undefined,
-});
+/** Reuse one pool per isolate (Vercel serverless / warm instances) to avoid connection storms */
+const globalForPool = globalThis as typeof globalThis & { __byuconnectPg?: pg.Pool };
+const pool =
+  globalForPool.__byuconnectPg ??
+  (globalForPool.__byuconnectPg = new Pool({
+    connectionString: databaseUrl,
+    ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+    max: Number(process.env.PG_POOL_MAX || 10),
+    idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 15_000,
+  }));
 
+export { pool };
 export const db = drizzle(pool, { schema });
 
 export * from "./schema/index.js";

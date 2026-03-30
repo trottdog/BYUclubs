@@ -136,6 +136,17 @@ If authentication fails:
 
 - make sure `SESSION_SECRET` is set before starting the backend
 
+### Vercel (`build:vercel`)
+
+Root `api/*.js` handlers import `artifacts/api-server/dist/app.mjs`. That file is gitignored and must be produced **during the Vercel build**. The `pnpm run build:vercel` script builds the API server first, then the Vite app.
+
+In the Vercel project **Settings → Environment Variables**, set at least:
+
+- `DATABASE_URL` — Postgres connection string (Supabase pooler URL is recommended)
+- `SESSION_SECRET` — long random string (must stay stable per deployment so signed session cookies validate)
+
+Redeploy after changing env vars. If **registration returns 500**, open the failing request in the Network tab and read the JSON `detail` field; common causes are missing `DATABASE_URL`, wrong DB schema, or the API bundle not being built (fixed by the `build:vercel` step above).
+
 ## Admin accounts
 
 The seed includes one unique admin user per club:
