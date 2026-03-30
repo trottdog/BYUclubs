@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import {
   getGetClubQueryOptions,
   useGetBuildings,
@@ -8,7 +8,9 @@ import {
 } from "@workspace/api-client-react";
 import { EventCard } from "@/components/event-card";
 import { ClubCard } from "@/components/club-card";
-import { MapView } from "@/components/map-view";
+const MapView = lazy(() =>
+  import("@/components/map-view").then((m) => ({ default: m.MapView })),
+);
 import {
   Select,
   SelectContent,
@@ -169,7 +171,9 @@ export default function DiscoverPage() {
       <div className="relative w-full max-w-full overflow-hidden rounded-2xl border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(36vw,200px)] sm:min-h-[200px] sm:rounded-[1.75rem] md:min-h-[220px]">
         <img
           src="/images/discover-campus-life.png"
-          alt=""
+          alt="BYU campus"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         {/* Read lane: opaque enough for white type; right side of banner stays mostly the raw photo */}
@@ -361,7 +365,15 @@ export default function DiscoverPage() {
           </div>
         ) : view === "map" ? (
           <div className="h-[min(82vh,680px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:h-[min(70vh,560px)]">
-            <MapView events={filteredEvents} buildings={filteredBuildings} />
+            <Suspense
+              fallback={
+                <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 bg-muted">
+                  <p className="connect-eyebrow text-muted-foreground">Loading map…</p>
+                </div>
+              }
+            >
+              <MapView events={filteredEvents} buildings={filteredBuildings} />
+            </Suspense>
           </div>
         ) : view === "clubs" ? (
           <section>

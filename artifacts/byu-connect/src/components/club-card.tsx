@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Club } from "@workspace/api-client-react";
 import { Users, ArrowUpRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { DEFAULT_CLUB_AVATAR_URL } from "@/lib/avatars";
 
 export function ClubCard({
@@ -15,21 +14,14 @@ export function ClubCard({
 }) {
   return (
     <Link href={`/clubs/${club.id}`}>
-      <motion.div 
-        whileHover={{ y: -2 }}
-        className="connect-card border-t-primary group flex h-full min-h-[20rem] flex-col gap-5 bg-white p-6"
-      >
+      <div className="connect-card border-t-primary group flex h-full min-h-[20rem] flex-col gap-5 bg-white p-6">
         <div className="flex items-start justify-between">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary bg-white p-1 transition-colors duration-200 group-hover:border-accent">
-            <img src={DEFAULT_CLUB_AVATAR_URL} alt="" className="h-full w-full object-contain" />
+            <img src={DEFAULT_CLUB_AVATAR_URL} alt="" decoding="async" loading="lazy" className="h-full w-full object-contain" />
           </div>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            className="text-primary"
-          >
+          <div className="text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">
             <ArrowUpRight className="w-5 h-5" />
-          </motion.div>
+          </div>
         </div>
 
         <div className="min-h-0 flex-1">
@@ -69,7 +61,7 @@ export function ClubCard({
             View club
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

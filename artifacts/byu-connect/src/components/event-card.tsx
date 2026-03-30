@@ -4,7 +4,6 @@ import { Clock, MapPin, Bookmark, ArrowUpRight } from "lucide-react";
 import { format, isSameDay, isWithinInterval, addHours, isBefore } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 export function EventCard({ event, compact = false }: { event: Event; compact?: boolean }) {
   const queryClient = useQueryClient();
@@ -39,20 +38,21 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
   const capacityPercent = Math.min(100, Math.round((event.reservedCount / event.capacity) * 100));
 
   return (
-    <motion.div 
-      whileHover={{ y: -2 }}
+    <div
       className={cn(
         "connect-card group relative flex flex-col overflow-hidden border-t-primary bg-white",
-        compact ? "min-h-[8rem] flex-row" : "h-full min-h-[24rem]"
+        compact ? "min-h-[8rem] flex-row" : "h-full min-h-[24rem]",
       )}
     >
       {!compact && (
         <div className="relative h-48 w-full overflow-hidden rounded-t-[inherit] bg-muted">
-          {event.coverImageUrl && (
+            {event.coverImageUrl && (
             <img 
               src={event.coverImageUrl}
-              alt={event.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+              alt=""
+              decoding="async"
+              loading="lazy"
+              className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03]"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
@@ -69,7 +69,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
           <div className="absolute bottom-4 left-4 z-20">
              <div className="flex gap-2">
                 <span className={cn(
-                  "px-2 py-1 text-[11px] font-semibold flex items-center gap-2 border bg-white/90 backdrop-blur-md",
+                  "px-2 py-1 text-[11px] font-semibold flex items-center gap-2 border bg-white/95",
                   "rounded-xl",
                   isLive ? "text-accent border-accent" : "text-primary border-primary"
                 )}>
@@ -110,10 +110,9 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
              </div>
              <div className="flex items-center gap-3">
                 <div className="h-1 w-20 overflow-hidden rounded-full bg-muted">
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: `${capacityPercent}%` }}
-                     className="h-full bg-primary" 
+                   <div
+                     className="h-full origin-left bg-primary motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out"
+                     style={{ width: `${capacityPercent}%` }}
                    />
                 </div>
                 <span className="text-xs font-semibold text-primary">{capacityPercent}%</span>
@@ -127,6 +126,6 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
 
         <Link href={`/events/${event.id}`} className="absolute inset-0 z-0" aria-label={`View ${event.title}`} />
       </div>
-    </motion.div>
+    </div>
   );
 }
