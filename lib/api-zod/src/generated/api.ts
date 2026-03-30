@@ -265,6 +265,18 @@ export const GetClubResponse = zod
           }),
         )
         .optional(),
+      photos: zod
+        .array(
+          zod.object({
+            id: zod.number(),
+            clubId: zod.number(),
+            imageUrl: zod.string(),
+            caption: zod.string().nullish(),
+            addedByUserId: zod.number().nullish(),
+            createdAt: zod.string(),
+          }),
+        )
+        .optional(),
     }),
   );
 

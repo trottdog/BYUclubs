@@ -366,7 +366,7 @@ export default function DiscoverPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {filteredClubs.map((club) => (
                     <ClubCard key={club.id} club={club} />
                   ))}
@@ -388,16 +388,14 @@ export default function DiscoverPage() {
                 SEE ALL EVENTS <ArrowUpRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-1px overflow-hidden rounded-2xl border border-border bg-border shadow-sm md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 rounded-2xl border border-border bg-card p-6 shadow-sm md:grid-cols-2 lg:grid-cols-3">
               {filteredEvents.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
+                <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-40">
                   <p className="text-xl font-semibold text-muted-foreground">No events found</p>
                 </div>
               ) : (
                 filteredEvents.map((event) => (
-                  <div key={event.id} className="bg-background">
-                    <EventCard event={event} />
-                  </div>
+                  <EventCard key={event.id} event={event} />
                 ))
               )}
             </div>

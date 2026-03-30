@@ -150,12 +150,12 @@ export default function MyClubsPage() {
       </div>
 
       <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex shrink-0 items-center border border-border bg-white p-1">
+        <div className="flex shrink-0 items-center rounded-2xl border border-border bg-white p-1">
           <button
             type="button"
             onClick={() => setTab("discover")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+              "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all sm:px-6",
               tab === "discover" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary",
             )}
           >
@@ -166,7 +166,7 @@ export default function MyClubsPage() {
             type="button"
             onClick={() => setTab("my")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+              "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all sm:px-6",
               tab === "my" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary",
             )}
           >
@@ -187,7 +187,7 @@ export default function MyClubsPage() {
             setSelectedCategoryId(Number.isFinite(id) ? id : null);
           }}
         >
-          <SelectTrigger className="h-10 w-[132px] border border-border bg-white px-4 text-[10px] font-black uppercase tracking-widest text-foreground hover:border-primary sm:w-[180px]">
+          <SelectTrigger className="h-10 w-[132px] rounded-2xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:border-primary sm:w-[180px]">
             <SelectValue placeholder="Topic" />
           </SelectTrigger>
           <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
@@ -209,7 +209,7 @@ export default function MyClubsPage() {
               setQuery("");
               setSelectedCategoryId(null);
             }}
-            className="inline-flex h-10 items-center gap-1.5 border border-border bg-white px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition hover:border-primary hover:text-foreground"
+            className="inline-flex h-10 items-center gap-1.5 rounded-2xl border border-border bg-white px-4 text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
             Clear
@@ -241,7 +241,7 @@ export default function MyClubsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredClubs.map((club) => {
               const tags = [club.categoryName];
               if (tab === "my" && manageableClubIds.has(club.id)) {

@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS announcements      CASCADE;
 DROP TABLE IF EXISTS reservations       CASCADE;
 DROP TABLE IF EXISTS event_saves        CASCADE;
 DROP TABLE IF EXISTS club_memberships   CASCADE;
+DROP TABLE IF EXISTS club_photos        CASCADE;
 DROP TABLE IF EXISTS events             CASCADE;
 DROP TABLE IF EXISTS clubs              CASCADE;
 DROP TABLE IF EXISTS categories         CASCADE;
@@ -114,6 +115,16 @@ CREATE TABLE announcements (
   title      TEXT        NOT NULL,
   body       TEXT        NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- club_photos
+CREATE TABLE club_photos (
+  id               SERIAL PRIMARY KEY,
+  club_id          INTEGER     NOT NULL REFERENCES clubs(id),
+  image_url        TEXT        NOT NULL,
+  caption          TEXT,
+  added_by_user_id INTEGER     REFERENCES users(id),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 

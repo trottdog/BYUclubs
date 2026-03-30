@@ -43,7 +43,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
       whileHover={{ y: -2 }}
       className={cn(
         "connect-card group relative flex flex-col overflow-hidden border-t-primary bg-white",
-        compact ? "h-32 flex-row" : "h-full"
+        compact ? "min-h-[8rem] flex-row" : "h-full min-h-[24rem]"
       )}
     >
       {!compact && (
@@ -81,27 +81,30 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
         </div>
       )}
 
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex-1">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="flex-1 min-h-0">
           <p className="connect-eyebrow mb-2">{event.clubName.toUpperCase()}</p>
-          <h3 className="text-xl font-bold mb-4 leading-tight group-hover:text-primary transition-colors text-foreground">
+          <h3 className="mb-4 line-clamp-2 text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
             {event.title}
           </h3>
           
-          <div className="space-y-2 mb-6">
+          <div className="mb-6 space-y-2">
             <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
               <MapPin className="w-3.5 h-3.5 text-primary" />
-              <span>{event.buildingName} / {event.roomNumber}</span>
+              <span className="truncate">{event.buildingName} / {event.roomNumber}</span>
             </div>
             <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
               <Clock className="w-3.5 h-3.5" />
               <span>{format(start, "HH:mm")} - {format(end, "HH:mm")}</span>
             </div>
           </div>
+          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+            {event.description}
+          </p>
         </div>
 
-        <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-          <div className="flex flex-col gap-1.5">
+        <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+          <div className="flex min-w-0 flex-col gap-1.5">
              <div className="text-[11px] font-medium text-muted-foreground">
                 Capacity
              </div>

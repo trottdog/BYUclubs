@@ -7,18 +7,20 @@ import { DEFAULT_CLUB_AVATAR_URL } from "@/lib/avatars";
 export function ClubCard({
   club,
   tags = [],
+  lastEventText,
 }: {
   club: Club;
   tags?: string[];
+  lastEventText?: string;
 }) {
   return (
     <Link href={`/clubs/${club.id}`}>
       <motion.div 
         whileHover={{ y: -2 }}
-        className="connect-card border-t-primary group flex flex-col gap-6 bg-white p-8"
+        className="connect-card border-t-primary group flex h-full min-h-[20rem] flex-col gap-5 bg-white p-6"
       >
         <div className="flex items-start justify-between">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden border border-primary bg-white p-1 transition-colors duration-200 group-hover:border-accent">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary bg-white p-1 transition-colors duration-200 group-hover:border-accent">
             <img src={DEFAULT_CLUB_AVATAR_URL} alt="" className="h-full w-full object-contain" />
           </div>
           <motion.div 
@@ -30,32 +32,40 @@ export function ClubCard({
           </motion.div>
         </div>
 
-        <div>
+        <div className="min-h-0 flex-1">
           <p className="connect-eyebrow mb-2">{club.categoryName.toUpperCase()}</p>
-          <h3 className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors text-foreground">
+          <h3 className="line-clamp-2 text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
             {club.name}
           </h3>
+          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+            {club.description}
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex min-h-[2rem] flex-wrap gap-1.5">
           {tags.map((tag) => (
             <span
               key={tag}
-              className="border border-border bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors"
+              className="rounded-lg border border-border bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors group-hover:text-foreground"
             >
               {tag}
             </span>
           ))}
         </div>
 
-        <div className="mt-auto pt-6 border-t border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-6 h-6 border border-border flex items-center justify-center bg-muted">
+        <div className="mt-auto flex items-center justify-between border-t border-border pt-5">
+          <div className="min-w-0 flex items-center gap-3">
+             <div className="flex h-6 w-6 items-center justify-center rounded-md border border-border bg-muted">
                 <Users className="w-3 h-3 text-primary" />
              </div>
-             <span className="text-xs font-medium text-muted-foreground">{club.memberCount} members</span>
+             <div className="min-w-0">
+               <p className="text-xs font-medium text-muted-foreground">{club.memberCount} members</p>
+               {lastEventText ? (
+                 <p className="truncate text-[11px] text-muted-foreground/80">{lastEventText}</p>
+               ) : null}
+             </div>
           </div>
-          <div className="text-xs font-semibold text-primary transition-all">
+          <div className="shrink-0 text-xs font-semibold text-primary transition-all">
             View club
           </div>
         </div>

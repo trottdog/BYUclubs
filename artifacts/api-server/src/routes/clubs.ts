@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import { eq, and, sql, ilike } from "drizzle-orm";
-import { db, clubsTable, categoriesTable, clubMembershipsTable, eventsTable, buildingsTable, announcementsTable, eventSavesTable, reservationsTable, usersTable } from "@workspace/db";
+import { db, clubsTable, categoriesTable, clubMembershipsTable, eventsTable, buildingsTable, announcementsTable, clubPhotosTable, eventSavesTable, reservationsTable, usersTable } from "@workspace/db";
 import {
   GetClubsQueryParams,
   GetClubsResponse,
@@ -276,12 +276,31 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
     .orderBy(announcementsTable.createdAt)
     .limit(10);
 
+  const photos = await db
+    .select({
+      id: clubPhotosTable.id,
+      clubId: clubPhotosTable.clubId,
+      imageUrl: clubPhotosTable.imageUrl,
+      caption: clubPhotosTable.caption,
+      addedByUserId: clubPhotosTable.addedByUserId,
+      createdAt: clubPhotosTable.createdAt,
+    })
+    .from(clubPhotosTable)
+    .where(eq(clubPhotosTable.clubId, id))
+    .orderBy(clubPhotosTable.createdAt);
+
   const detail = {
     ...club,
     upcomingEvents,
     announcements: announcements.map((a) => ({
       ...a,
       createdAt: a.createdAt.toISOString(),
+    })),
+    photos: photos.map((photo) => ({
+      ...photo,
+      caption: photo.caption ?? null,
+      addedByUserId: photo.addedByUserId ?? null,
+      createdAt: photo.createdAt.toISOString(),
     })),
   };
 
@@ -408,6 +427,103 @@ router.patch("/clubs/:id", async (req, res): Promise<void> => {
   await db.update(clubsTable).set(updates).where(eq(clubsTable.id, id));
   const refreshed = await buildClubList(userId, [eq(clubsTable.id, id)]);
   res.json(refreshed[0]);
+});
+
+router.post("/clubs/:id/photos", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid club ID." });
+    return;
+  }
+
+  const [club] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id)).limit(1);
+  if (!club) {
+    res.status(404).json({ error: "Club not found." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, id);
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to add photos to this club." });
+    return;
+  }
+
+  const imageUrl = typeof req.body?.imageUrl === "string" ? req.body.imageUrl.trim() : "";
+  const caption = typeof req.body?.caption === "string" ? req.body.caption.trim() : "";
+
+  if (!imageUrl) {
+    res.status(400).json({ error: "imageUrl is required." });
+    return;
+  }
+
+  const urlIsValid = /^(https?:)?\/\//i.test(imageUrl);
+  if (!urlIsValid) {
+    res.status(400).json({ error: "imageUrl must be a valid absolute URL." });
+    return;
+  }
+
+  const [photo] = await db
+    .insert(clubPhotosTable)
+    .values({
+      clubId: id,
+      imageUrl,
+      caption: caption.length ? caption : null,
+      addedByUserId: userId,
+    })
+    .returning();
+
+  res.status(201).json({
+    id: photo.id,
+    clubId: photo.clubId,
+    imageUrl: photo.imageUrl,
+    caption: photo.caption ?? null,
+    addedByUserId: photo.addedByUserId ?? null,
+    createdAt: photo.createdAt.toISOString(),
+  });
+});
+
+router.delete("/clubs/:id/photos/:photoId", async (req, res): Promise<void> => {
+  const userId = getAuthUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const rawClubId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const rawPhotoId = Array.isArray(req.params.photoId) ? req.params.photoId[0] : req.params.photoId;
+  const clubId = parseInt(rawClubId, 10);
+  const photoId = parseInt(rawPhotoId, 10);
+  if (isNaN(clubId) || isNaN(photoId)) {
+    res.status(400).json({ error: "Invalid club or photo ID." });
+    return;
+  }
+
+  const allowed = await canManageClub(userId, clubId);
+  if (!allowed) {
+    res.status(403).json({ error: "You do not have permission to remove photos from this club." });
+    return;
+  }
+
+  const [photo] = await db
+    .select({ id: clubPhotosTable.id, clubId: clubPhotosTable.clubId })
+    .from(clubPhotosTable)
+    .where(and(eq(clubPhotosTable.id, photoId), eq(clubPhotosTable.clubId, clubId)))
+    .limit(1);
+
+  if (!photo) {
+    res.status(404).json({ error: "Photo not found." });
+    return;
+  }
+
+  await db.delete(clubPhotosTable).where(eq(clubPhotosTable.id, photoId));
+  res.json({ deleted: true });
 });
 
 router.post("/clubs/:id/join", async (req, res): Promise<void> => {

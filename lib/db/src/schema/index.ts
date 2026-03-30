@@ -7,3 +7,4 @@ export * from "./club_memberships.js";
 export * from "./event_saves.js";
 export * from "./reservations.js";
 export * from "./announcements.js";
+export * from "./club_photos.js";
