@@ -360,7 +360,7 @@ export default function DiscoverPage() {
             <p className="connect-eyebrow">LOADING CAMPUS DATA...</p>
           </div>
         ) : view === "map" ? (
-          <div className="h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="h-[min(82vh,680px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:h-[min(70vh,560px)]">
             <MapView events={filteredEvents} buildings={filteredBuildings} />
           </div>
         ) : view === "clubs" ? (

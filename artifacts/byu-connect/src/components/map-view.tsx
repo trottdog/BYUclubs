@@ -64,9 +64,43 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
     syncSelectionToMode();
   }, [syncSelectionToMode]);
 
+  const buildingTabEvents = selectedBuilding ? groupedEvents[selectedBuilding.id] ?? [] : [];
+
+  const eventLinks = (evs: Event[]) => (
+    <div className="space-y-3">
+      {evs.map((ev) => (
+        <Link key={ev.id} href={`/events/${ev.id}`} className="block">
+          <div className="rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-1 text-sm font-extrabold text-foreground">{ev.title}</p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  {new Date(ev.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  • {ev.clubName}
+                </p>
+              </div>
+              <span
+                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                style={{
+                  backgroundColor: `${ev.categoryColor}20`,
+                  color: ev.categoryColor,
+                }}
+              >
+                {ev.categoryName}
+              </span>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="grid h-full min-h-0 w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-      <div className="relative h-[360px] min-h-0 border-b border-border bg-muted lg:h-full lg:border-b-0 lg:border-r">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div className="relative h-[min(280px,46vh)] min-h-[200px] shrink-0 border-b border-border bg-muted lg:h-full lg:min-h-0 lg:border-b-0 lg:border-r">
         {filterOverlay ? (
           <div className="absolute top-3 right-20 z-10 max-w-[calc(100%-6rem)]">
             {filterOverlay}
@@ -101,7 +135,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
               >
                 <button
                   type="button"
-                  className="group relative cursor-pointer transition-transform duration-200 hover:scale-105"
+                  className="group relative cursor-pointer touch-manipulation transition-transform duration-200 hover:scale-105"
                   aria-label={
                     sidebarMode === "events"
                       ? `Show ${eventCount} events at ${building.name}`
@@ -141,7 +175,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
         </Map>
       </div>
 
-      <aside className="flex h-[320px] min-h-0 flex-col overflow-hidden bg-card lg:h-full">
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card lg:h-full lg:min-h-0">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <div className="flex gap-1 rounded-lg border-2 border-border bg-muted/40 p-1">
             <button
@@ -214,35 +248,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {selectedBuildingEvents.map((ev) => (
-                    <Link key={ev.id} href={`/events/${ev.id}`} className="block">
-                      <div className="rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p className="line-clamp-1 text-sm font-extrabold text-foreground">{ev.title}</p>
-                            <p className="mt-1 text-xs font-medium text-muted-foreground">
-                              {new Date(ev.startTime).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}{" "}
-                              • {ev.clubName}
-                            </p>
-                          </div>
-                          <span
-                            className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
-                            style={{
-                              backgroundColor: `${ev.categoryColor}20`,
-                              color: ev.categoryColor,
-                            }}
-                          >
-                            {ev.categoryName}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                eventLinks(selectedBuildingEvents)
               )}
             </div>
           </>
@@ -276,31 +282,52 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
                   <p className="mt-1 text-sm text-muted-foreground">Clear filters on Discover to see more.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {buildings.map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setSelectedBuildingId(b.id)}
-                      className={cn(
-                        "w-full rounded-2xl border-2 bg-card p-4 text-left transition-all hover:border-primary/40 hover:bg-primary/5",
-                        selectedBuildingId === b.id
-                          ? "border-primary shadow-sm"
-                          : "border-border",
+                <>
+                  {selectedBuilding ? (
+                    <div className="mb-5">
+                      {buildingTabEvents.length > 0 ? (
+                        <>
+                          <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                            Events at this location
+                          </p>
+                          {eventLinks(buildingTabEvents)}
+                        </>
+                      ) : (
+                        <p className="text-sm font-medium text-muted-foreground">
+                          No events at this building with your current filters. Try adjusting search or time filters, or open the Events tab to browse map pins.
+                        </p>
                       )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="line-clamp-2 text-sm font-extrabold text-foreground">{b.name}</p>
-                        <span className="shrink-0 rounded-sm bg-primary px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                          {b.abbreviation}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground leading-relaxed">
-                        {b.address}
-                      </p>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                  ) : null}
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                    All buildings
+                  </p>
+                  <div className="space-y-3">
+                    {buildings.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedBuildingId(b.id)}
+                        className={cn(
+                          "w-full rounded-2xl border-2 bg-card p-4 text-left transition-all hover:border-primary/40 hover:bg-primary/5",
+                          selectedBuildingId === b.id
+                            ? "border-primary shadow-sm"
+                            : "border-border",
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="line-clamp-2 text-sm font-extrabold text-foreground">{b.name}</p>
+                          <span className="shrink-0 rounded-sm bg-primary px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                            {b.abbreviation}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground leading-relaxed">
+                          {b.address}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </>
