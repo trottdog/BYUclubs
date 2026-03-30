@@ -23,7 +23,7 @@ const registerSchema = z.object({
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, signUp } = useAuth();
+  const { login, register } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +71,7 @@ export default function AuthPage() {
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     try {
       setIsLoading(true);
-      await signUp(data);
+      await register(data);
       setLocation(
         typeof window !== "undefined"
           ? getSafeReturnPath(window.location.search)

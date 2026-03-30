@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
 import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie.js";
@@ -55,15 +55,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       return;
     }
 
-    const { password, firstName: rawFirst, lastName: rawLast } = parsed.data;
-    const firstName = rawFirst.trim();
-    const lastName = rawLast.trim();
+    const { password, firstName, lastName } = parsed.data;
     const email = normalizeEmail(parsed.data.email);
-
-    if (!firstName || !lastName) {
-      res.status(400).json({ error: "First and last name are required." });
-      return;
-    }
 
     if (!email.endsWith("@byu.edu")) {
       res.status(400).json({ error: "Only BYU email addresses (@byu.edu) are allowed." });
@@ -80,34 +73,25 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const createdAt = new Date();
+    await db.execute(sql`
+      insert into users (email, password_hash, first_name, last_name)
+      values (${email}, ${passwordHash}, ${firstName}, ${lastName})
+    `);
 
-    const [row] = await db
-      .insert(usersTable)
-      .values({
-        email,
-        passwordHash,
-        firstName,
-        lastName,
-        createdAt,
-      })
-      .returning();
+    const [user] = await db
+      .select(publicUserColumns)
+      .from(usersTable)
+      .where(eq(usersTable.email, email));
 
-    if (!row) {
-      res.status(500).json({ error: "Registration failed", detail: "Could not create user." });
+    if (!user) {
+      res.status(500).json({ error: "Registration failed", detail: "Created user could not be loaded." });
       return;
     }
 
-    setAuthSession(res, row.id);
+    setAuthSession(res, user.id);
 
     res.status(201).json({
-      user: toAuthResponseUser({
-        id: row.id,
-        email: row.email,
-        firstName: row.firstName,
-        lastName: row.lastName,
-        createdAt: row.createdAt,
-      }),
+      user: toAuthResponseUser(user),
     });
   } catch (err: any) {
     if (err?.code === "23505") {
