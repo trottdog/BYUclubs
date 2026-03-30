@@ -43,6 +43,10 @@ function toAuthResponseUser(user: {
   };
 }
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 router.post("/auth/register", async (req, res): Promise<void> => {
   try {
     const parsed = RegisterBody.safeParse(req.body);
@@ -51,7 +55,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       return;
     }
 
-    const { email, password, firstName, lastName } = parsed.data;
+    const { password, firstName, lastName } = parsed.data;
+    const email = normalizeEmail(parsed.data.email);
 
     if (!email.endsWith("@byu.edu")) {
       res.status(400).json({ error: "Only BYU email addresses (@byu.edu) are allowed." });
@@ -68,10 +73,20 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const [user] = await db
+    const [createdUser] = await db
       .insert(usersTable)
       .values({ email, passwordHash, firstName, lastName })
-      .returning(publicUserColumns);
+      .returning({ id: usersTable.id });
+
+    const [user] = await db
+      .select(publicUserColumns)
+      .from(usersTable)
+      .where(eq(usersTable.id, createdUser.id));
+
+    if (!user) {
+      res.status(500).json({ error: "Registration failed", detail: "Created user could not be loaded." });
+      return;
+    }
 
     setAuthSession(res, user.id);
 
@@ -79,6 +94,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       user: toAuthResponseUser(user),
     });
   } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(409).json({ error: "An account with this email already exists." });
+      return;
+    }
     req.log?.error?.({ err }, "Registration failed");
     res.status(500).json({
       error: "Registration failed",
@@ -96,7 +115,8 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       return;
     }
 
-    const { email, password } = parsed.data;
+    const password = parsed.data.password;
+    const email = normalizeEmail(parsed.data.email);
 
     const [user] = await db
       .select(authUserColumns)
