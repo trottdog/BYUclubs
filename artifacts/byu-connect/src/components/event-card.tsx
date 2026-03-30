@@ -16,7 +16,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
           updateProfileAfterSave(current, event, result.saved),
         );
         queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
+        queryClient.refetchQueries({ queryKey: getProfileQueryKey(), type: "all" });
       }
     }
   });

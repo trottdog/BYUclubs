@@ -22,13 +22,22 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, setLocation]);
 
-  const { data: profile, isLoading: profileLoading } = useGetUserProfile({
+  const { data: profile, isLoading: profileLoading, refetch } = useGetUserProfile({
     query: {
       enabled: !!user,
       staleTime: 0,
       refetchOnMount: "always",
     },
+    request: {
+      cache: "no-store",
+    },
   });
+
+  useEffect(() => {
+    if (user) {
+      void refetch();
+    }
+  }, [user, refetch]);
 
   const getBioStorageKey = (userId: number) => `byuconnect:profile-bio:${userId}`;
 

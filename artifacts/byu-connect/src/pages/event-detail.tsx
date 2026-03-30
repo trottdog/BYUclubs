@@ -70,7 +70,7 @@ export default function EventDetailPage({
         }
         queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] });
         queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
+        queryClient.refetchQueries({ queryKey: getProfileQueryKey(), type: "all" });
       }
     }
   });
@@ -84,7 +84,7 @@ export default function EventDetailPage({
           );
         }
         queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] });
-        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
+        queryClient.refetchQueries({ queryKey: getProfileQueryKey(), type: "all" });
       }
     }
   });
