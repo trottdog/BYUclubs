@@ -4,15 +4,19 @@ import { Clock, MapPin, Bookmark, ArrowUpRight } from "lucide-react";
 import { format, isSameDay, isWithinInterval, addHours, isBefore } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { getProfileQueryKey, updateProfileAfterSave } from "@/lib/profile-cache";
 
 export function EventCard({ event, compact = false }: { event: Event; compact?: boolean }) {
   const queryClient = useQueryClient();
 
   const saveMutation = useSaveEvent({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
+        queryClient.setQueryData(getProfileQueryKey(), (current: any) =>
+          updateProfileAfterSave(current, event, result.saved),
+        );
         queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/users/profile"] });
+        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
       }
     }
   });

@@ -7,6 +7,11 @@ import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  getProfileQueryKey,
+  updateProfileAfterReservation,
+  updateProfileAfterSave,
+} from "@/lib/profile-cache";
 
 export default function EventDetailPage({
   routeParams,
@@ -57,19 +62,29 @@ export default function EventDetailPage({
 
   const saveMutation = useSaveEvent({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
+        if (event) {
+          queryClient.setQueryData(getProfileQueryKey(), (current: any) =>
+            updateProfileAfterSave(current, event, result.saved),
+          );
+        }
         queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] });
         queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/users/profile"] });
+        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
       }
     }
   });
 
   const reserveMutation = useReserveEvent({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
+        if (event) {
+          queryClient.setQueryData(getProfileQueryKey(), (current: any) =>
+            updateProfileAfterReservation(current, event, result.reserved, result.reservedCount),
+          );
+        }
         queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] });
-        queryClient.invalidateQueries({ queryKey: ["/api/users/profile"] });
+        queryClient.invalidateQueries({ queryKey: getProfileQueryKey() });
       }
     }
   });
