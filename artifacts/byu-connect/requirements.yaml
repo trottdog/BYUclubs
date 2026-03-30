@@ -42,6 +42,9 @@ images:
   - path: "artifacts/byu-connect/public/images/default-club-avatar.png"
     description: "Official BYU Y oval logo on blue; default club avatar on cards and club detail until per-club logos exist"
     aspect_ratio: "1:1"
+  - path: "artifacts/byu-connect/public/images/discover-campus-life.png"
+    description: "Campus atrium student-life / club-fair scene; Discover page rounded hero beside 'Campus Life' headline"
+    aspect_ratio: "1:1"
 
 notes:
   - Using session-based authentication from /api/auth/me
