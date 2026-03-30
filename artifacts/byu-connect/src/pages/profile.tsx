@@ -111,9 +111,9 @@ export default function ProfilePage() {
 
         <div className="flex-1 pt-2 text-center md:text-left">
           <p className="connect-eyebrow mb-1">Profile</p>
-          <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <h1 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             {user.firstName} {user.lastName}
-          </h2>
+          </h1>
           <p className="mt-1 text-sm font-medium text-muted-foreground">{user.email}</p>
 
           <p className="mt-3 text-sm whitespace-pre-wrap break-words text-foreground/90">
@@ -214,9 +214,9 @@ export default function ProfilePage() {
                 <History className="h-6 w-6 shrink-0 text-[#0ea5e9]" />
                 <div>
                   <p className="connect-section-label">History</p>
-                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Participated events
-                  </h3>
+                  </h2>
                 </div>
               </div>
 
@@ -240,9 +240,9 @@ export default function ProfilePage() {
                 <Users className="h-6 w-6 shrink-0 text-[#f97316]" />
                 <div>
                   <p className="connect-section-label">Leadership</p>
-                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Clubs I created
-                  </h3>
+                  </h2>
                 </div>
               </div>
 
@@ -257,12 +257,15 @@ export default function ProfilePage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {createdClubs.map((club) => (
-                    <Link key={club.id} href={`/clubs/${club.id}`}>
-                      <a className="block rounded-xl border bg-card p-4 transition-all hover:border-primary/60 hover:shadow-sm">
-                        <p className="text-lg font-bold leading-tight text-foreground">{club.name}</p>
-                        <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{club.description}</p>
-                        <p className="mt-3 text-xs font-semibold text-primary">View club details</p>
-                      </a>
+                    <Link
+                      key={club.id}
+                      href={`/clubs/${club.id}`}
+                      aria-label={`${club.name}. ${club.description?.slice(0, 120) ?? "Open club page"}`}
+                      className="block rounded-xl border bg-card p-4 transition-all hover:border-primary/60 hover:shadow-sm"
+                    >
+                      <p className="text-lg font-bold leading-tight text-foreground">{club.name}</p>
+                      <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{club.description}</p>
+                      <p className="mt-3 text-xs font-semibold text-primary">View club details</p>
                     </Link>
                   ))}
                 </div>
@@ -274,9 +277,9 @@ export default function ProfilePage() {
                 <CalendarCheck className="h-6 w-6 shrink-0 text-[#22c55e]" />
                 <div>
                   <p className="connect-section-label">Schedule</p>
-                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     My reservations
-                  </h3>
+                  </h2>
                 </div>
               </div>
 
@@ -300,9 +303,9 @@ export default function ProfilePage() {
                 <Bookmark className="h-6 w-6 shrink-0 text-primary" />
                 <div>
                   <p className="connect-section-label">Bookmarks</p>
-                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Saved events
-                  </h3>
+                  </h2>
                 </div>
               </div>
 

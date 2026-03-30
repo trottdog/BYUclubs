@@ -63,10 +63,12 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
           
           <div className="absolute top-4 right-4 z-20">
             <button 
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveMutation.mutate({ id: event.id }); }}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition-colors hover:bg-primary hover:text-white"
+              className="relative z-30 flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition-colors hover:bg-primary hover:text-white"
+              aria-label={event.isSaved ? `Remove “${event.title}” from saved events` : `Save “${event.title}” to your profile`}
             >
-              <Bookmark className={cn("w-4 h-4", event.isSaved && "fill-current")} />
+              <Bookmark className={cn("w-4 h-4", event.isSaved && "fill-current")} aria-hidden />
             </button>
           </div>
 
@@ -85,51 +87,52 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
         </div>
       )}
 
-      <div className="flex flex-1 flex-col p-6">
-        <div className="flex-1 min-h-0">
+      <Link
+        href={`/events/${event.id}`}
+        aria-labelledby={`event-card-title-${event.id}`}
+        className="relative z-10 flex min-h-0 flex-1 flex-col p-6 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <div className="min-h-0 flex-1">
           <p className="connect-eyebrow mb-2">{event.clubName.toUpperCase()}</p>
-          <h3 className="mb-4 line-clamp-2 text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+          <h3
+            id={`event-card-title-${event.id}`}
+            className="mb-4 line-clamp-2 text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary"
+          >
             {event.title}
           </h3>
-          
+
           <div className="mb-6 space-y-2">
-            <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
-              <MapPin className="w-3.5 h-3.5 text-primary" />
+            <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
               <span className="truncate">{event.buildingName} / {event.roomNumber}</span>
             </div>
-            <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
-              <Clock className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
               <span>{format(start, "HH:mm")} - {format(end, "HH:mm")}</span>
             </div>
           </div>
-          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-            {event.description}
-          </p>
+          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{event.description}</p>
         </div>
 
         <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
           <div className="flex min-w-0 flex-col gap-1.5">
-             <div className="text-[11px] font-medium text-muted-foreground">
-                Capacity
-             </div>
-             <div className="flex items-center gap-3">
-                <div className="h-1 w-20 overflow-hidden rounded-full bg-muted">
-                   <div
-                     className="h-full origin-left bg-primary motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out"
-                     style={{ width: `${capacityPercent}%` }}
-                   />
-                </div>
-                <span className="text-xs font-semibold text-primary">{capacityPercent}%</span>
-             </div>
+            <div className="text-[11px] font-medium text-muted-foreground">Capacity</div>
+            <div className="flex items-center gap-3">
+              <div className="h-1 w-20 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full origin-left bg-primary motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out"
+                  style={{ width: `${capacityPercent}%` }}
+                />
+              </div>
+              <span className="text-xs font-semibold text-primary">{capacityPercent}%</span>
+            </div>
           </div>
-          
-          <Link href={`/events/${event.id}`} className="text-xs font-semibold text-primary flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-             View <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        </div>
 
-        <Link href={`/events/${event.id}`} className="absolute inset-0 z-0" aria-label={`View ${event.title}`} />
-      </div>
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-primary transition-all group-hover:gap-2.5" aria-hidden="true">
+            View <ArrowUpRight className="h-3 w-3" />
+          </span>
+        </div>
+      </Link>
     </div>
   );
 }

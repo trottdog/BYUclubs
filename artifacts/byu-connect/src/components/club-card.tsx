@@ -13,7 +13,7 @@ export function ClubCard({
   lastEventText?: string;
 }) {
   return (
-    <Link href={`/clubs/${club.id}`}>
+    <Link href={`/clubs/${club.id}`} aria-label={`Open ${club.name}, ${club.categoryName}`}>
       <div className="connect-card border-t-primary group flex h-full min-h-[20rem] flex-col gap-5 bg-white p-6">
         <div className="flex items-start justify-between">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary bg-white p-1 transition-colors duration-200 group-hover:border-accent">

@@ -69,11 +69,18 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
   const eventLinks = (evs: Event[]) => (
     <div className="space-y-3">
       {evs.map((ev) => (
-        <Link key={ev.id} href={`/events/${ev.id}`} className="block">
+        <Link
+          key={ev.id}
+          href={`/events/${ev.id}`}
+          className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-labelledby={`map-event-${ev.id}`}
+        >
           <div className="rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-sm font-extrabold text-foreground">{ev.title}</p>
+                <p id={`map-event-${ev.id}`} className="line-clamp-1 text-sm font-extrabold text-foreground">
+                  {ev.title}
+                </p>
                 <p className="mt-1 text-xs font-medium text-muted-foreground">
                   {new Date(ev.startTime).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -181,6 +188,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
             <button
               type="button"
               onClick={() => setSidebarMode("events")}
+              aria-pressed={sidebarMode === "events"}
               className={cn(
                 "flex flex-1 items-center justify-center gap-2 rounded-md py-2.5 text-[10px] font-black uppercase tracking-[0.14em] transition-all",
                 sidebarMode === "events"
@@ -188,12 +196,13 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
                   : "text-muted-foreground hover:bg-background hover:text-foreground",
               )}
             >
-              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
               Events
             </button>
             <button
               type="button"
               onClick={() => setSidebarMode("buildings")}
+              aria-pressed={sidebarMode === "buildings"}
               className={cn(
                 "flex flex-1 items-center justify-center gap-2 rounded-md py-2.5 text-[10px] font-black uppercase tracking-[0.14em] transition-all",
                 sidebarMode === "buildings"
@@ -201,7 +210,7 @@ export function MapView({ events, buildings, filterOverlay }: MapViewProps) {
                   : "text-muted-foreground hover:bg-background hover:text-foreground",
               )}
             >
-              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <Building2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
               Buildings
             </button>
           </div>

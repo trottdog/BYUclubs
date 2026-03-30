@@ -205,7 +205,7 @@ export default function DiscoverPage() {
               )}
             </h1>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <p className="max-w-lg text-xs font-medium leading-relaxed text-white/85 sm:text-left sm:text-sm">
+              <p className="max-w-lg text-xs font-medium leading-relaxed text-white/95 sm:text-left sm:text-sm">
                 {timeFilter === "all"
                   ? "Find events, clubs, and places on campus."
                   : "Showing events for this time window. Use the filter above to switch."}
@@ -213,11 +213,11 @@ export default function DiscoverPage() {
               <div className="flex shrink-0 justify-center gap-8 sm:justify-end">
                 <div className="flex flex-col items-center sm:items-start">
                   <span className="text-xl font-bold leading-none tracking-tight text-[color:rgb(147,197,253)] sm:text-2xl">Live</span>
-                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Status</span>
+                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/90">Status</span>
                 </div>
                 <div className="flex flex-col items-center sm:items-start">
                   <span className="text-xl font-bold leading-none tracking-tight text-white sm:text-2xl">{events?.length ?? 0}</span>
-                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Events</span>
+                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/90">Events</span>
                 </div>
               </div>
             </div>
@@ -254,6 +254,7 @@ export default function DiscoverPage() {
                     suggestions.map((suggestion) => (
                       <button
                         key={suggestion.key}
+                        type="button"
                         onClick={() => {
                           setQuery(suggestion.value);
                           setIsSearchFocused(false);
@@ -261,10 +262,11 @@ export default function DiscoverPage() {
                           else setView("events");
                         }}
                         className="flex w-full items-start justify-between gap-6 px-6 py-4 text-left hover:bg-primary group transition-colors"
+                        aria-label={`${suggestion.label}. ${suggestion.subtitle}. ${suggestion.type}. Apply search.`}
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground group-hover:text-white">{suggestion.label}</p>
-                          <p className="truncate text-[11px] font-medium text-muted-foreground mt-0.5 group-hover:text-white/60">{suggestion.subtitle}</p>
+                          <p className="truncate text-[11px] font-medium text-muted-foreground mt-0.5 group-hover:text-white/85">{suggestion.subtitle}</p>
                         </div>
                         <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground group-hover:bg-white/20 group-hover:text-white">
                           {suggestion.type}
@@ -315,7 +317,10 @@ export default function DiscoverPage() {
             </div>
 
             <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-              <SelectTrigger className="h-10 w-full max-w-[200px] rounded-2xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:border-primary sm:w-[160px] sm:max-w-none sm:px-6">
+              <SelectTrigger
+                aria-label="Filter events by time range"
+                className="h-10 w-full max-w-[200px] rounded-2xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:border-primary sm:w-[160px] sm:max-w-none sm:px-6"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border border-primary bg-white">
@@ -402,7 +407,18 @@ export default function DiscoverPage() {
             )}
           </section>
         ) : (
-          <section>
+          <section aria-labelledby="discover-events-heading">
+            <div className="mb-4 flex flex-col items-center gap-3 border-b border-border pb-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+              <div className="flex flex-col gap-0.5">
+                <p className="connect-eyebrow">CALENDAR</p>
+                <h2 id="discover-events-heading" className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                  Events
+                </h2>
+              </div>
+              <div className="bg-muted border border-border px-5 py-2 text-sm font-medium text-muted-foreground sm:px-6 sm:py-3">
+                {filteredEvents.length} EVENTS
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm md:grid-cols-2 md:gap-5 md:p-5 lg:grid-cols-3">
               {filteredEvents.length === 0 ? (
                 <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-20">

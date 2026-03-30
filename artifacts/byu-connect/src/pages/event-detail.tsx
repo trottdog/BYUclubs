@@ -257,11 +257,12 @@ export default function EventDetailPage({
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-40 md:pb-32 overflow-x-hidden">
-      <button 
-        onClick={() => history.back()} 
+      <button
+        type="button"
+        onClick={() => history.back()}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold transition-colors w-fit bg-card px-4 py-2 rounded-lg border shadow-sm"
       >
-        <ArrowLeft className="w-4 h-4" /> Back
+        <ArrowLeft className="w-4 h-4" aria-hidden /> Back
       </button>
 
       {/* Hero Section */}
@@ -277,19 +278,22 @@ export default function EventDetailPage({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
         
         <div className="absolute top-4 right-4 flex gap-2 z-10">
-          <button 
+          <button
+            type="button"
             onClick={() => saveMutation.mutate({ id: event.id })}
             className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-colors border border-white/20"
+            aria-label={event.isSaved ? "Remove event from saved" : "Save event to profile"}
           >
-            <Bookmark className={cn("w-5 h-5", event.isSaved && "fill-current text-white")} />
+            <Bookmark className={cn("w-5 h-5", event.isSaved && "fill-current text-white")} aria-hidden />
           </button>
           {canManage && (
             <button
+              type="button"
               onClick={() => setIsEditMode((v) => !v)}
               className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-colors border border-white/20"
-              title={isEditMode ? "Cancel edit mode" : "Edit event"}
+              aria-label={isEditMode ? "Cancel editing event" : "Edit event details"}
             >
-              <PencilLine className="w-5 h-5" />
+              <PencilLine className="w-5 h-5" aria-hidden />
             </button>
           )}
         </div>

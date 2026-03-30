@@ -78,7 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       "flex items-center justify-between rounded-2xl px-6 py-4 transition-all duration-200 cursor-pointer text-sm font-medium",
                       isActive
                         ? "bg-white text-primary shadow-lg"
-                        : "text-white/40 hover:text-white hover:bg-white/5"
+                        : "text-white/65 hover:text-white hover:bg-white/5"
                     )}
                   >
                     <div className="flex items-center gap-4">
@@ -99,7 +99,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex items-start gap-3 relative z-10">
                 <Activity className="w-3.5 h-3.5 mt-0.5 text-white shrink-0" />
                 <div>
-                  <p className="connect-eyebrow !text-[9px] !text-white/40">
+                  <p className="connect-eyebrow !text-[9px] !text-white/70">
                     LIVE CAMPUS
                   </p>
                   <p className="mt-2 text-sm text-white leading-relaxed font-medium">
@@ -109,14 +109,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="mt-8 space-y-4">
                 <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[11px] font-medium text-white/40 flex items-center gap-2">
+                  <p className="text-[11px] font-medium text-white/70 flex items-center gap-2">
                     <CalendarDays className="w-3 h-3" />
                     EVENTS
                   </p>
                   <p className="text-2xl font-bold text-white leading-none">{totalEvents}</p>
                 </div>
                 <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[11px] font-medium text-white/40 flex items-center gap-2">
+                  <p className="text-[11px] font-medium text-white/70 flex items-center gap-2">
                     <Users className="w-3 h-3" />
                     CLUBS
                   </p>
@@ -160,8 +160,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <span className="font-sans font-bold text-xl tracking-tight">BYU</span>
         </Link>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="text-white"
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-primary-nav"
+          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" aria-hidden /> : <Menu className="w-6 h-6" aria-hidden />}
         </button>
       </div>
 
@@ -175,14 +182,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             transition={{ type: "tween", duration: 0.2 }}
             className="fixed inset-0 z-40 flex flex-col bg-sidebar px-4 pt-24"
           >
-            <nav className="flex-1 space-y-2">
+            <nav id="mobile-primary-nav" className="flex-1 space-y-2" aria-label="Primary">
               {visibleNavItems.map((item) => {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
                     <span className={cn(
                       "flex items-center justify-between rounded-2xl py-6 text-xl font-semibold border-b border-white/10",
-                      isActive ? "text-white bg-white/10 px-4 -mx-4" : "text-white/40"
+                      isActive ? "text-white bg-white/10 px-4 -mx-4" : "text-white/70"
                     )}>
                       {item.name}
                       <ArrowUpRight className="w-5 h-5" />

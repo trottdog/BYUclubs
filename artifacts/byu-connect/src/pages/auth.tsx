@@ -108,13 +108,13 @@ export default function AuthPage() {
             <div className="mb-8 flex h-20 w-20 items-center justify-center border-2 border-white/20 bg-white/10 p-2 shadow-lg">
               <img src="/images/logo.png" alt="" className="h-full w-full object-contain" />
             </div>
-            <p className="connect-eyebrow !text-white/60">BYU Connect</p>
+            <p className="connect-eyebrow !text-white/85">BYU Connect</p>
             <h1 className="mt-4 font-sans text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl">
               Your campus,
               <br />
               connected.
             </h1>
-            <p className="mt-6 max-w-md text-sm font-medium leading-relaxed text-white/75">
+            <p className="mt-6 max-w-md text-sm font-medium leading-relaxed text-white/92">
               Discover events, join clubs, and make the most of your BYU experience in one place.
             </p>
           </div>
