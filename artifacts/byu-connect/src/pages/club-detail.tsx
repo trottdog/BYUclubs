@@ -11,7 +11,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { EventCard } from "@/components/event-card";
@@ -64,6 +64,7 @@ export default function ClubDetailPage({
     imageUrl: "",
     caption: "",
   });
+  const [selectedPhotoName, setSelectedPhotoName] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -181,6 +182,7 @@ export default function ClubDetailPage({
       }
 
       setPhotoForm({ imageUrl: "", caption: "" });
+      setSelectedPhotoName("");
       await queryClient.invalidateQueries({ queryKey: ["/api/clubs", clubId] });
       toast({ title: "Photo added", description: "The club gallery has been updated." });
     } catch (err: any) {
@@ -192,6 +194,44 @@ export default function ClubDetailPage({
     } finally {
       setIsAddingPhoto(false);
     }
+  };
+
+  const handlePhotoFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setPhotoForm((prev) => ({ ...prev, imageUrl: "" }));
+      setSelectedPhotoName("");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please choose an image file.",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      setPhotoForm((prev) => ({ ...prev, imageUrl: "" }));
+      setSelectedPhotoName("");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      setPhotoForm((prev) => ({ ...prev, imageUrl: result }));
+      setSelectedPhotoName(file.name);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Upload failed",
+        description: "Could not read that file. Please try another image.",
+        variant: "destructive",
+      });
+      setPhotoForm((prev) => ({ ...prev, imageUrl: "" }));
+      setSelectedPhotoName("");
+    };
+    reader.readAsDataURL(file);
   };
 
   const removePhoto = async (photoId: number) => {
@@ -445,12 +485,22 @@ export default function ClubDetailPage({
                         <ImagePlus className="w-4 h-4 text-primary" />
                         <p className="text-sm font-bold text-foreground">Add to club gallery</p>
                       </div>
-                      <input
-                        value={photoForm.imageUrl}
-                        onChange={(e) => setPhotoForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                        className="w-full rounded-lg border bg-card px-3 py-2 text-sm"
-                        placeholder="Image URL"
-                      />
+                      <label className="flex cursor-pointer flex-col gap-2 rounded-lg border border-dashed bg-card px-4 py-4 text-sm transition hover:border-primary/40">
+                        <span className="font-medium text-foreground">Choose photo from your computer</span>
+                        <span className="text-xs text-muted-foreground">
+                          PNG, JPG, WEBP, or GIF. Smaller images upload faster.
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoFileChange}
+                          className="sr-only"
+                        />
+                        <span className="inline-flex w-fit items-center gap-2 rounded-lg border bg-background px-3 py-2 text-xs font-semibold text-foreground">
+                          <ImagePlus className="h-4 w-4 text-primary" />
+                          {selectedPhotoName || "Select image"}
+                        </span>
+                      </label>
                       <textarea
                         value={photoForm.caption}
                         onChange={(e) => setPhotoForm((prev) => ({ ...prev, caption: e.target.value }))}
@@ -459,7 +509,7 @@ export default function ClubDetailPage({
                       />
                       <button
                         onClick={addPhoto}
-                        disabled={isAddingPhoto}
+                        disabled={isAddingPhoto || !photoForm.imageUrl}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-70"
                       >
                         <ImagePlus className="h-4 w-4" />

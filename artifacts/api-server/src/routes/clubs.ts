@@ -480,8 +480,14 @@ router.post("/clubs/:id/photos", async (req, res): Promise<void> => {
   }
 
   const urlIsValid = /^(https?:)?\/\//i.test(imageUrl);
-  if (!urlIsValid) {
-    res.status(400).json({ error: "imageUrl must be a valid absolute URL." });
+  const dataUrlIsValid = /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/.test(imageUrl);
+  if (!urlIsValid && !dataUrlIsValid) {
+    res.status(400).json({ error: "imageUrl must be a valid absolute URL or uploaded image data." });
+    return;
+  }
+
+  if (dataUrlIsValid && imageUrl.length > 5_000_000) {
+    res.status(400).json({ error: "Uploaded image is too large. Please choose a smaller file." });
     return;
   }
 
