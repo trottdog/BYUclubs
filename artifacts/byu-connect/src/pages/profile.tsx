@@ -25,6 +25,8 @@ export default function ProfilePage() {
   const { data: profile, isLoading: profileLoading } = useGetUserProfile({
     query: {
       enabled: !!user,
+      staleTime: 0,
+      refetchOnMount: "always",
     },
   });
 

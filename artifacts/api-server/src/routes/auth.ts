@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse } from "@workspace/api-zod";
 import { clearAuthSession, getAuthUserId, setAuthSession } from "../lib/auth-cookie.js";
@@ -73,9 +73,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await db
-      .insert(usersTable)
-      .values({ email, passwordHash, firstName, lastName });
+    await db.execute(sql`
+      insert into users (email, password_hash, first_name, last_name)
+      values (${email}, ${passwordHash}, ${firstName}, ${lastName})
+    `);
 
     const [user] = await db
       .select(publicUserColumns)

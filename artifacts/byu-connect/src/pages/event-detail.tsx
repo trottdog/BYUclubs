@@ -57,7 +57,11 @@ export default function EventDetailPage({
 
   const saveMutation = useSaveEvent({
     mutation: {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] })
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/events", eventId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/users/profile"] });
+      }
     }
   });
 

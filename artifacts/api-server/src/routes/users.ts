@@ -37,6 +37,10 @@ function toUserResponse(user: {
   };
 }
 
+function toIsoString(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
 router.patch("/users/profile", async (req, res): Promise<void> => {
   const userId = getAuthUserId(req);
   if (!userId) {
@@ -117,8 +121,8 @@ router.get("/users/profile", async (req, res): Promise<void> => {
   ) {
     return rows.map((e) => ({
       ...e,
-      startTime: e.startTime.toISOString(),
-      endTime: e.endTime.toISOString(),
+      startTime: toIsoString(e.startTime),
+      endTime: toIsoString(e.endTime),
       reservedCount: reservedCountMap.get(e.id) ?? 0,
       isSaved: state.isSaved,
       isReserved: state.isReserved,
