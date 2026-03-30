@@ -20,15 +20,20 @@ function toUserResponse(user: {
   email: string;
   firstName: string;
   lastName: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }) {
+  const createdAt =
+    user.createdAt instanceof Date
+      ? user.createdAt.toISOString()
+      : new Date(user.createdAt).toISOString();
+
   return {
     id: user.id,
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
     bio: null,
-    createdAt: user.createdAt.toISOString(),
+    createdAt,
   };
 }
 
