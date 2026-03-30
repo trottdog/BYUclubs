@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -35,12 +35,12 @@
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar: hsl(var(--sidebar));
 
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
 }
 
 :root {
@@ -78,7 +78,7 @@
   --sidebar-border: 211 100% 12%;
   --sidebar-ring: 211 100% 25%;
 
-  --radius: 0rem;
+  --radius: 0.75rem;
 }
 
 .dark {
@@ -104,7 +104,7 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-black tracking-tighter uppercase;
+    @apply font-sans font-bold tracking-tight;
   }
 
   ::-webkit-scrollbar {
@@ -124,15 +124,15 @@
 
 /* Editorial display utilities (BYU Connect — avoid vendor-themed class names) */
 .connect-display-title {
-  @apply font-sans text-6xl md:text-8xl font-black leading-[0.85] tracking-tighter uppercase;
+  @apply font-sans text-5xl md:text-7xl font-extrabold leading-[0.92] tracking-tight;
 }
 
 .connect-eyebrow {
-  @apply font-sans text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] text-primary;
+  @apply font-sans text-[11px] md:text-xs font-semibold uppercase tracking-[0.22em] text-primary;
 }
 
 .connect-card {
-  @apply bg-card border-t-4 border-t-primary border-x border-b border-border transition-all duration-200;
+  @apply rounded-2xl bg-card border-t-4 border-t-primary border-x border-b border-border transition-all duration-200;
 }
 
 .connect-card:hover {
@@ -140,26 +140,26 @@
 }
 
 .connect-primary-btn {
-  @apply bg-primary text-white font-black uppercase tracking-[0.2em] text-[10px] px-8 py-4 transition-all duration-200 flex items-center gap-3 hover:bg-secondary active:scale-95;
+  @apply rounded-xl bg-primary text-white font-bold uppercase tracking-[0.14em] text-[11px] px-8 py-4 transition-all duration-200 flex items-center gap-3 hover:bg-secondary active:scale-95;
 }
 
 .connect-panel {
-  @apply border border-border p-4 bg-white/40 backdrop-blur-sm;
+  @apply rounded-2xl border border-border p-4 bg-white/40 backdrop-blur-sm;
 }
 
 /* Shared across pages (matches Discover search / controls) */
 .connect-search-input {
-  @apply w-full border border-border bg-white py-4 pl-16 pr-12 text-[10px] font-black uppercase tracking-[0.3em] text-foreground outline-none transition-all focus:border-primary focus:bg-primary/5;
+  @apply w-full rounded-2xl border border-border bg-white py-4 pl-16 pr-12 text-sm font-medium tracking-normal text-foreground outline-none transition-all focus:border-primary focus:bg-primary/5;
 }
 
 .connect-back-btn {
-  @apply inline-flex items-center gap-2 rounded-none border border-border bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-foreground shadow-sm transition-all hover:border-primary hover:text-primary;
+  @apply inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-[11px] font-semibold text-foreground shadow-sm transition-all hover:border-primary hover:text-primary;
 }
 
 .connect-page-title {
-  @apply border-b-4 border-primary pb-4 text-4xl font-black italic tracking-tighter text-foreground md:text-5xl;
+  @apply border-b-4 border-primary pb-4 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl;
 }
 
 .connect-section-label {
-  @apply mb-2 block font-sans text-[10px] font-bold uppercase tracking-[0.4em] text-primary md:text-xs;
+  @apply mb-2 block font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-primary md:text-xs;
 }
