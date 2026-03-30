@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import type { UserProfile } from "@workspace/api-client-react";
+import { useGetUserProfile } from "@workspace/api-client-react";
 import { EventCard } from "@/components/event-card";
 import { Bookmark, CalendarCheck, History, LogOut, Loader2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +15,6 @@ export default function ProfilePage() {
   const [bioDraft, setBioDraft] = useState("");
   const [activeBio, setActiveBio] = useState<string | null>(null);
   const [isSavingBio, setIsSavingBio] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -24,58 +22,22 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, setLocation]);
 
+  const { data: profile, isLoading: profileLoading, refetch } = useGetUserProfile({
+    query: {
+      enabled: !!user,
+      staleTime: 0,
+      refetchOnMount: "always",
+    },
+    request: {
+      cache: "no-store",
+    },
+  });
+
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setProfileLoading(false);
-      return;
+    if (user) {
+      void refetch();
     }
-
-    let cancelled = false;
-
-    async function loadProfile() {
-      setProfileLoading(true);
-      try {
-        const res = await fetch("/api/users/profile", {
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            accept: "application/json",
-            "cache-control": "no-cache",
-            pragma: "no-cache",
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to load profile.");
-        }
-
-        const data = (await res.json()) as UserProfile;
-        if (!cancelled) {
-          setProfile(data);
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setProfile(null);
-          toast({
-            title: "Could not load profile",
-            description: err?.message || "Please try again.",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setProfileLoading(false);
-        }
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, toast]);
+  }, [user, refetch]);
 
   const getBioStorageKey = (userId: number) => `byuconnect:profile-bio:${userId}`;
 
