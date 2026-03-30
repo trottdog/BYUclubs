@@ -159,46 +159,50 @@ export default function DiscoverPage() {
 
   return (
     <div className="w-full flex flex-col gap-24 overflow-x-hidden">
-      {/* Official Header */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4 text-primary">
-           <ShieldCheck className="w-5 h-5 fill-current" />
-           <p className="connect-eyebrow">BYU CONNECT</p>
-        </div>
-        <div className="relative flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-           <div className="flex min-w-0 flex-1 flex-col gap-6">
-              <h1 className="connect-display-title text-foreground">
-                 DISCOVER <span className="text-primary">CAMPUS</span> LIFE
-              </h1>
-              <div className="flex flex-col gap-10 md:flex-row md:items-end md:gap-12">
-                 <p className="max-w-xl border-l-2 border-primary pl-6 text-sm font-medium leading-relaxed text-muted-foreground">
-                    Find events, clubs, and places on campus. Student organizations keep the community connected—browse what&apos;s happening and where.
-                 </p>
-                 <div className="flex gap-8">
-                    <div className="flex flex-col">
-                       <span className="text-2xl font-bold leading-none tracking-tight text-primary">Live</span>
-                       <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Status</span>
-                    </div>
-                    <div className="flex flex-col">
-                       <span className="text-2xl font-bold leading-none tracking-tight text-foreground">{events?.length ?? 0}</span>
-                       <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Events</span>
-                    </div>
-                 </div>
+      {/* Official header — LinkedIn-style wide cover (photo stays vivid; gradient only anchors text at bottom) */}
+      <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-border shadow-[0_24px_60px_-20px_rgba(0,35,90,0.35)] min-h-[min(42vw,280px)] sm:min-h-[260px] md:min-h-[300px]">
+        <img
+          src="/images/discover-campus-life.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        {/* Read lane: opaque enough for white type; right side of banner stays mostly the raw photo */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black/78 from-[-5%] via-black/35 via-45% to-transparent to-100%"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-[32%] bg-gradient-to-t from-black/70 to-transparent sm:h-[38%]"
+          aria-hidden
+        />
+
+        <div className="relative z-10 flex min-h-[min(42vw,280px)] flex-col justify-between gap-8 p-6 sm:min-h-[260px] sm:p-8 md:min-h-[300px] md:p-10">
+          <div className="flex items-center gap-4 text-white">
+            <ShieldCheck className="h-5 w-5 shrink-0 fill-current text-white" />
+            <p className="connect-eyebrow !text-white/95">BYU CONNECT</p>
+          </div>
+
+          <div className="flex flex-col gap-8">
+            <h1 className="connect-display-title text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+              DISCOVER <span className="text-[color:rgb(147,197,253)]">CAMPUS</span> LIFE
+            </h1>
+            <div className="flex flex-col gap-8 md:flex-row md:items-end md:gap-12">
+              <p className="max-w-xl border-l-2 border-white/70 pl-6 text-sm font-medium leading-relaxed text-white/95">
+                Find events, clubs, and places on campus. Student organizations keep the community connected—browse what&apos;s
+                happening and where.
+              </p>
+              <div className="flex shrink-0 gap-8">
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold leading-none tracking-tight text-[color:rgb(147,197,253)]">Live</span>
+                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Status</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold leading-none tracking-tight text-white">{events?.length ?? 0}</span>
+                  <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/80">Events</span>
+                </div>
               </div>
-           </div>
-           <div className="relative mx-auto shrink-0 lg:mx-0">
-              <div
-                className="pointer-events-none absolute -left-6 -top-6 h-56 w-56 rounded-full bg-primary/[0.12] blur-3xl sm:h-64 sm:w-64"
-                aria-hidden
-              />
-              <div className="relative h-44 w-44 overflow-hidden rounded-full border-4 border-background shadow-[0_22px_50px_-12px_rgba(0,49,120,0.38)] ring-2 ring-primary/25 sm:h-52 sm:w-52 md:h-56 md:w-56">
-                 <img
-                    src="/images/discover-campus-life.png"
-                    alt=""
-                    className="h-full w-full object-cover"
-                 />
-              </div>
-           </div>
+            </div>
+          </div>
         </div>
       </div>
 
