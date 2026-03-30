@@ -19,7 +19,11 @@ import SuperAdmin from "@/pages/super-admin";
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={Auth} />
+      <Route path="/auth">
+        <Layout>
+          <Auth />
+        </Layout>
+      </Route>
       <Route path="/">
         <Layout>
           <Discover />

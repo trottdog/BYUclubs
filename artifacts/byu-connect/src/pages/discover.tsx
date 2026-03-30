@@ -19,34 +19,33 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
-  Building2,
   CalendarClock,
   Coffee,
-  Filter,
   List,
   Map as MapIcon,
   Search as SearchIcon,
-  X,
+  ArrowUpRight,
+  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQueries } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 type TimeFilter = "all" | "now" | "today" | "week" | "upcoming";
 
 const TIME_FILTERS: Array<{ id: TimeFilter; label: string }> = [
-  { id: "all", label: "All time" },
-  { id: "now", label: "Happening now" },
-  { id: "today", label: "Today" },
-  { id: "week", label: "This week" },
-  { id: "upcoming", label: "Upcoming" },
+  { id: "all", label: "ALL TIME" },
+  { id: "now", label: "LIVE NOW" },
+  { id: "today", label: "TODAY" },
+  { id: "week", label: "THIS WEEK" },
+  { id: "upcoming", label: "UPCOMING" },
 ];
 
 export default function DiscoverPage() {
   const { user } = useAuth();
-  const [view, setView] = useState<"list" | "map">("list");
-  const [showMapFilters, setShowMapFilters] = useState(false);
+  const [view, setView] = useState<"events" | "map" | "clubs">("events");
   const [query, setQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -57,23 +56,9 @@ export default function DiscoverPage() {
 
   const { data: events, isLoading: eventsLoading } = useGetEvents();
   const { data: clubs, isLoading: clubsLoading } = useGetClubs();
-  const { data: joinedClubs, isLoading: joinedClubsLoading } = useGetClubs(
-    user ? { myClubs: true } : undefined,
-    { query: { enabled: !!user, queryKey: ["/api/clubs", "joined-feed", user?.id ?? null] } },
-  );
   const { data: categories } = useGetCategories();
   const { data: buildings, isLoading: buildingsLoading } = useGetBuildings();
-  const joinedClubDetailQueries = useQueries({
-    queries: (joinedClubs ?? []).map((club) =>
-      getGetClubQueryOptions(club.id, {
-        query: {
-          enabled: !!user,
-          staleTime: 60_000,
-        },
-      }),
-    ),
-  });
-
+  
   const filteredEvents = useMemo(() => {
     if (!events) return [];
     const now = new Date().getTime();
@@ -106,12 +91,8 @@ export default function DiscoverPage() {
 
       if (timeFilter === "all") return true;
       if (timeFilter === "now") return start <= now && now <= end;
-      if (timeFilter === "today") {
-        return eventDate >= startOfToday && eventDate < endOfToday;
-      }
-      if (timeFilter === "week") {
-        return eventDate >= startOfToday && eventDate < weekAhead;
-      }
+      if (timeFilter === "today") return eventDate >= startOfToday && eventDate < endOfToday;
+      if (timeFilter === "week") return eventDate >= startOfToday && eventDate < weekAhead;
       return start >= now;
     };
 
@@ -121,29 +102,14 @@ export default function DiscoverPage() {
         if (foodOnly && !event.hasFood) return false;
         return matchesQuery(event) && matchesTime(event);
       })
-      .sort((a, b) => {
-      const startA = new Date(a.startTime).getTime();
-      const endA = new Date(a.endTime).getTime();
-      const startB = new Date(b.startTime).getTime();
-      const endB = new Date(b.endTime).getTime();
-
-      const isNowA = startA <= now && now <= endA;
-      const isNowB = startB <= now && now <= endB;
-
-      if (isNowA && !isNowB) return -1;
-      if (!isNowA && isNowB) return 1;
-
-      return startA - startB;
-    });
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [events, foodOnly, normalizedQuery, selectedCategoryId, timeFilter]);
 
   const filteredClubs = useMemo(() => {
     if (!clubs) return [];
-
     return clubs.filter((club) => {
       if (selectedCategoryId && club.categoryId !== selectedCategoryId) return false;
       if (!normalizedQuery) return true;
-
       const text = `${club.name} ${club.description} ${club.categoryName}`.toLowerCase();
       return text.includes(normalizedQuery);
     });
@@ -152,7 +118,6 @@ export default function DiscoverPage() {
   const filteredBuildings = useMemo(() => {
     if (!buildings) return [];
     if (!normalizedQuery) return buildings;
-
     return buildings.filter((building) => {
       const text = `${building.name} ${building.abbreviation} ${building.address}`.toLowerCase();
       return text.includes(normalizedQuery);
@@ -164,93 +129,28 @@ export default function DiscoverPage() {
 
   const suggestions = useMemo(() => {
     if (!normalizedLiveQuery) return [];
-
     const eventSuggestions = (events || [])
-      .filter((event) => {
-        const text = `${event.title} ${event.description} ${event.buildingName} ${event.clubName}`.toLowerCase();
-        return text.includes(normalizedLiveQuery);
-      })
+      .filter((event) => event.title.toLowerCase().includes(normalizedLiveQuery))
       .slice(0, 4)
       .map((event) => ({
         key: `event-${event.id}`,
-        label: event.title,
-        subtitle: `${event.buildingName} • ${event.clubName}`,
-        type: "Event",
+        label: event.title.toUpperCase(),
+        subtitle: event.clubName.toUpperCase(),
+        type: "EVENT",
         value: event.title,
       }));
-
     const clubSuggestions = (clubs || [])
-      .filter((club) => {
-        const text = `${club.name} ${club.description}`.toLowerCase();
-        return text.includes(normalizedLiveQuery);
-      })
+      .filter((club) => club.name.toLowerCase().includes(normalizedLiveQuery))
       .slice(0, 3)
       .map((club) => ({
         key: `club-${club.id}`,
-        label: club.name,
-        subtitle: club.categoryName,
-        type: "Club",
+        label: club.name.toUpperCase(),
+        subtitle: club.categoryName.toUpperCase(),
+        type: "CLUB",
         value: club.name,
       }));
-
-    const buildingSuggestions = (buildings || [])
-      .filter((building) => {
-        const text = `${building.name} ${building.abbreviation} ${building.address}`.toLowerCase();
-        return text.includes(normalizedLiveQuery);
-      })
-      .slice(0, 3)
-      .map((building) => ({
-        key: `building-${building.id}`,
-        label: building.name,
-        subtitle: `${building.abbreviation} • ${building.address}`,
-        type: "Building",
-        value: building.name,
-      }));
-
-    return [...eventSuggestions, ...clubSuggestions, ...buildingSuggestions].slice(0, 8);
-  }, [buildings, clubs, events, normalizedLiveQuery]);
-
-  const joinedClubAnnouncements = useMemo(() => {
-    const items: Array<{
-      clubId: number;
-      avatarInitials: string;
-      avatarColor: string;
-      categoryColor: string;
-      announcementId: number;
-      createdAt: string;
-    }> = [];
-
-    if (!user || !joinedClubs?.length) return items;
-
-    joinedClubs.forEach((club, index) => {
-      const detail = joinedClubDetailQueries[index]?.data;
-      const latestAnnouncement = [...(detail?.announcements ?? [])].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )[0];
-
-      if (!latestAnnouncement) return;
-      if (selectedCategoryId && club.categoryId !== selectedCategoryId) return;
-
-      const text = `${club.name} ${club.description} ${club.categoryName} ${latestAnnouncement.title} ${latestAnnouncement.body}`.toLowerCase();
-      if (normalizedQuery && !text.includes(normalizedQuery)) return;
-
-      items.push({
-        clubId: club.id,
-        avatarInitials: club.avatarInitials,
-        avatarColor: club.avatarColor,
-        categoryColor: club.categoryColor,
-        announcementId: latestAnnouncement.id,
-        createdAt: latestAnnouncement.createdAt,
-      });
-    });
-
-    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [joinedClubDetailQueries, joinedClubs, normalizedQuery, selectedCategoryId, user]);
-
-  const joinedAnnouncementsLoading =
-    !!user &&
-    (joinedClubsLoading ||
-      (!!joinedClubs?.length && joinedClubDetailQueries.some((query) => query.isLoading)));
+    return [...eventSuggestions, ...clubSuggestions].slice(0, 8);
+  }, [clubs, events, normalizedLiveQuery]);
 
   const activeFilterCount =
     Number(timeFilter !== "all") +
@@ -258,358 +158,227 @@ export default function DiscoverPage() {
     Number(foodOnly);
 
   return (
-    <div className="w-full min-w-0 max-w-full flex flex-col gap-6 overflow-x-hidden">
-      <div className="relative">
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => {
-            setTimeout(() => setIsSearchFocused(false), 100);
-          }}
-          placeholder="Search events, clubs, or buildings..."
-          className="w-full rounded-xl border bg-card py-3 pl-12 pr-12 text-sm md:text-base outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
+    <div className="w-full flex flex-col gap-24 overflow-x-hidden">
+      {/* Official Header */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4 text-primary">
+           <ShieldCheck className="w-5 h-5 fill-current" />
+           <p className="connect-eyebrow">BYU CONNECT</p>
+        </div>
+        <h1 className="connect-display-title italic text-foreground">
+           DISCOVER <span className="text-primary">CAMPUS</span> LIFE
+        </h1>
+        <div className="flex flex-col md:flex-row gap-12 items-start md:items-end">
+           <p className="max-w-xl text-muted-foreground font-bold uppercase tracking-tight leading-none text-sm border-l-2 border-primary pl-6">
+              Find events, clubs, and places on campus. Student organizations keep the community connected—browse what&apos;s happening and where.
+           </p>
+           <div className="flex gap-8">
+              <div className="flex flex-col">
+                 <span className="text-2xl font-black italic text-primary leading-none tracking-tighter">LIVE</span>
+                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">STATUS</span>
+              </div>
+              <div className="flex flex-col">
+                 <span className="text-2xl font-black italic text-foreground leading-none tracking-tighter">{events?.length ?? 0}</span>
+                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">EVENTS</span>
+              </div>
+           </div>
+        </div>
+      </div>
 
-        {isSearchFocused && normalizedLiveQuery.length > 0 && (
-          <div className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border bg-card p-2 shadow-lg">
-            {suggestions.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-muted-foreground">No suggestions yet.</div>
-            ) : (
-              suggestions.map((suggestion) => (
-                <button
-                  key={suggestion.key}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    setQuery(suggestion.value);
-                    setView("list");
-                    setIsSearchFocused(false);
-                  }}
-                  className="flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-muted"
+      {/* Industrial Search & Filter */}
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md py-6 -mx-8 px-8 border-y border-border">
+        <div className="flex flex-col gap-6">
+          <div className="relative">
+            <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder="SEARCH EVENTS, CLUBS & BUILDINGS..."
+              className="connect-search-input"
+            />
+            
+            <AnimatePresence>
+              {isSearchFocused && normalizedLiveQuery.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto border-2 border-primary bg-white p-2 shadow-xl"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">{suggestion.label}</p>
-                    <p className="truncate text-xs text-muted-foreground">{suggestion.subtitle}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground">
-                    {suggestion.type}
-                  </span>
-                </button>
-              ))
+                  {suggestions.length === 0 ? (
+                    <div className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">NO MATCHES FOUND.</div>
+                  ) : (
+                    suggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.key}
+                        onClick={() => {
+                          setQuery(suggestion.value);
+                          setIsSearchFocused(false);
+                          if (suggestion.type === "CLUB") setView("clubs");
+                          else setView("events");
+                        }}
+                        className="flex w-full items-start justify-between gap-6 px-6 py-4 text-left hover:bg-primary group transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[10px] font-black text-foreground uppercase tracking-wider group-hover:text-white">{suggestion.label}</p>
+                          <p className="truncate text-[8px] font-bold text-muted-foreground mt-0.5 group-hover:text-white/60 tracking-widest">{suggestion.subtitle}</p>
+                        </div>
+                        <span className="shrink-0 bg-muted px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-foreground group-hover:bg-white/20 group-hover:text-white">
+                          {suggestion.type}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="flex items-center gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex shrink-0 items-center border border-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setView("events")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  view === "events" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <List className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">EVENTS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("map")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  view === "map" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <MapIcon className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">MAP</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("clubs")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  view === "clubs" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">CLUBS</span>
+              </button>
+            </div>
+
+            <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
+              <SelectTrigger className="h-10 w-[160px] border border-border bg-white px-6 text-[10px] font-black uppercase tracking-widest hover:border-primary text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-primary">
+                {TIME_FILTERS.map((preset) => (
+                  <SelectItem key={preset.id} value={preset.id} className="text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white">
+                    {preset.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <button
+              onClick={() => setFoodOnly((v) => !v)}
+              className={cn(
+                "h-10 px-6 border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3",
+                foodOnly ? "bg-primary text-white border-primary" : "border-border bg-white text-muted-foreground hover:border-primary hover:text-primary"
+              )}
+            >
+              <Coffee className="h-4 w-4" />
+              FOOD
+            </button>
+
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setTimeFilter("all"); setSelectedCategoryId(null); setFoodOnly(false); }}
+                className="h-10 px-6 border border-destructive/40 text-destructive text-[10px] font-black uppercase tracking-widest hover:bg-destructive hover:text-white transition-all"
+              >
+                RESET
+              </button>
             )}
           </div>
-        )}
-      </div>
-
-      <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex items-center rounded-full border bg-card p-1 shadow-sm">
-          <button
-            onClick={() => setView("list")}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
-              view === "list" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <List className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Feed</span>
-          </button>
-          <button
-            onClick={() => setView("map")}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
-              view === "map" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <MapIcon className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Map</span>
-          </button>
         </div>
-
-        <Select
-          value={timeFilter}
-          onValueChange={(v) => setTimeFilter(v as TimeFilter)}
-        >
-          <SelectTrigger className="h-9 w-[110px] rounded-full border bg-card px-3 text-xs font-semibold sm:w-[132px] sm:text-sm">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              <SelectValue />
-            </span>
-          </SelectTrigger>
-          <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
-            {TIME_FILTERS.map((preset) => (
-              <SelectItem key={preset.id} value={preset.id} className="text-sm font-medium">
-                {preset.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={selectedCategoryId === null ? "all" : String(selectedCategoryId)}
-          onValueChange={(v) => {
-            if (v === "all") setSelectedCategoryId(null);
-            else {
-              const id = parseInt(v, 10);
-              setSelectedCategoryId(Number.isFinite(id) ? id : null);
-            }
-          }}
-        >
-          <SelectTrigger className="h-9 w-[118px] rounded-full border bg-card px-3 text-xs font-semibold sm:w-[150px] sm:text-sm">
-            <SelectValue placeholder="Topic" />
-          </SelectTrigger>
-          <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
-            <SelectItem value="all" className="text-sm font-medium">
-              All categories
-            </SelectItem>
-            {categories?.map((cat) => (
-              <SelectItem key={cat.id} value={String(cat.id)} className="text-sm font-medium">
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <button
-          type="button"
-          onClick={() => setFoodOnly((v) => !v)}
-          className={cn(
-            "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-all sm:text-sm",
-            foodOnly
-              ? "border-primary bg-primary text-white"
-              : "border-border bg-card text-foreground hover:bg-muted"
-          )}
-          aria-pressed={foodOnly}
-        >
-          <Coffee className="h-3.5 w-3.5" />
-          Food
-        </button>
-
-        {activeFilterCount > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              setTimeFilter("all");
-              setSelectedCategoryId(null);
-              setFoodOnly(false);
-            }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition hover:text-foreground sm:text-sm"
-          >
-            <X className="h-3.5 w-3.5" />
-            Clear
-          </button>
-        )}
       </div>
 
-      <div className="flex-1 min-h-[600px] relative">
+      <div className="flex-1">
         {isLoading ? (
-          <div className="w-full h-64 flex flex-col items-center justify-center gap-4 text-primary">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <div className="w-full h-96 flex flex-col items-center justify-center gap-8">
+            <div className="w-16 h-1 bg-muted relative overflow-hidden">
+               <motion.div 
+                 initial={{ left: "-100%" }}
+                 animate={{ left: "100%" }}
+                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                 className="absolute inset-0 bg-primary" 
+               />
+            </div>
+            <p className="connect-eyebrow">LOADING CAMPUS DATA...</p>
           </div>
         ) : view === "map" ? (
-          <div className="absolute inset-0 h-[640px]">
-            <MapView
-              events={filteredEvents}
-              buildings={buildings || []}
-              filterOverlay={
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setShowMapFilters((v) => !v)}
-                    className="flex h-10 items-center gap-2 rounded-full border border-white/70 bg-white/92 px-3.5 text-sm font-semibold text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-white"
-                  >
-                    <Filter className="h-4 w-4" />
-                    Filters
-                    {(timeFilter !== "all" || selectedCategoryId !== null || foodOnly) && (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Active</span>
-                    )}
-                  </button>
-
-                  {showMapFilters && (
-                    <div className="max-h-[220px] w-[min(360px,calc(100vw-8rem))] overflow-y-auto rounded-2xl border border-white/70 bg-white/95 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-sm">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {TIME_FILTERS.map((preset) => (
-                          <button
-                            key={preset.id}
-                            onClick={() => setTimeFilter(preset.id)}
-                            className={cn(
-                              "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                              timeFilter === preset.id
-                                ? "border-primary bg-primary text-white"
-                                : "border-border bg-card text-foreground hover:bg-muted"
-                            )}
-                          >
-                            <span className="inline-flex items-center gap-1">
-                              <CalendarClock className="w-3.5 h-3.5" />
-                              {preset.label}
-                            </span>
-                          </button>
-                        ))}
-                        <button
-                          onClick={() => setFoodOnly((v) => !v)}
-                          className={cn(
-                            "rounded-full border px-3 py-1.5 text-xs font-bold sm:text-sm",
-                            foodOnly
-                              ? "border-primary bg-primary text-white"
-                              : "border-border bg-card text-foreground hover:bg-muted"
-                          )}
-                        >
-                          <span className="inline-flex items-center gap-1">
-                            <Coffee className="w-3.5 h-3.5" />
-                            Food provided
-                          </span>
-                        </button>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() => setSelectedCategoryId(null)}
-                          className={cn(
-                            "px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm border",
-                            selectedCategoryId === null
-                              ? "bg-primary border-primary text-white"
-                              : "bg-card border-border text-foreground hover:bg-muted"
-                          )}
-                        >
-                          All
-                        </button>
-                        {categories?.map((cat) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id)}
-                            className={cn(
-                              "px-4 py-2 rounded-full text-sm font-bold border transition-all shadow-sm flex items-center gap-2",
-                              selectedCategoryId === cat.id
-                                ? "text-white"
-                                : "bg-card border-border text-foreground hover:bg-muted"
-                            )}
-                            style={{
-                              backgroundColor: selectedCategoryId === cat.id ? cat.color : undefined,
-                              borderColor: selectedCategoryId === cat.id ? cat.color : undefined
-                            }}
-                          >
-                            {selectedCategoryId !== cat.id && (
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                            )}
-                            {cat.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              }
-            />
+          <div className="h-[700px] border border-border">
+            <MapView events={filteredEvents} buildings={filteredBuildings} />
           </div>
-        ) : (
-          <div className="flex min-w-0 flex-col gap-8 pb-8">
-            {(joinedAnnouncementsLoading || joinedClubAnnouncements.length > 0) && (
-              <section>
-                <div className="flex gap-3 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {joinedAnnouncementsLoading
-                    ? Array.from({ length: 4 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="h-16 w-16 shrink-0 animate-pulse rounded-full bg-muted"
-                        >
-                        />
-                      ))
-                    : joinedClubAnnouncements.map((item) => (
-                        <Link key={item.announcementId} href={`/clubs/${item.clubId}`}>
-                          <span
-                            className="relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg font-extrabold text-white transition hover:scale-[1.03]"
-                            title={formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-                            style={{
-                              background: `linear-gradient(135deg, ${item.categoryColor}, ${item.avatarColor})`,
-                            }}
-                          >
-                            <span
-                              className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-2 border-card shadow-sm"
-                              style={{ backgroundColor: item.avatarColor }}
-                            >
-                              {item.avatarInitials}
-                            </span>
-                          </span>
-                        </Link>
-                      ))}
-                </div>
-              </section>
+        ) : view === "clubs" ? (
+          <section>
+            <div className="mb-12 flex items-center justify-between border-b-2 border-border pb-6">
+              <div className="flex flex-col gap-2">
+                <p className="connect-eyebrow">COMMUNITY</p>
+                <h2 className="text-5xl font-black italic tracking-tighter text-foreground">ACTIVE CLUBS</h2>
+              </div>
+              <div className="bg-muted border border-border px-6 py-3 text-[10px] font-black tracking-widest text-muted-foreground italic">
+                {filteredClubs.length} CLUBS
+              </div>
+            </div>
+            {filteredClubs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
+                <p className="text-xl font-black italic uppercase tracking-widest text-muted-foreground">NO CLUBS FOUND</p>
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Try adjusting search or filters</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {filteredClubs.map((club) => (
+                  <ClubCard key={club.id} club={club} />
+                ))}
+              </div>
             )}
-
-            <section>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.length === 0 ? (
-                  <div className="col-span-full py-14 flex flex-col items-center justify-center text-muted-foreground bg-card rounded-2xl border border-dashed">
-                    <Filter className="w-10 h-10 mb-3 text-border" />
-                    <p className="font-semibold text-base text-foreground">No events found</p>
-                    <p className="text-sm">Try adjusting filters or search text.</p>
+          </section>
+        ) : (
+          <section>
+            <div className="mb-12 flex items-end justify-between border-b-4 border-primary pb-6">
+              <div className="flex flex-col gap-2">
+                <p className="connect-eyebrow">FEATURED</p>
+                <h2 className="text-5xl font-black italic tracking-tighter text-foreground">LIVE EVENTS</h2>
+              </div>
+              <Link
+                href="/events"
+                className="hidden items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-primary transition-colors hover:text-accent md:flex"
+              >
+                SEE ALL EVENTS <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-1px border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+              {filteredEvents.length === 0 ? (
+                <div className="col-span-full flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
+                  <p className="text-xl font-black italic uppercase tracking-widest text-muted-foreground">NO EVENTS FOUND</p>
+                </div>
+              ) : (
+                filteredEvents.map((event) => (
+                  <div key={event.id} className="bg-background">
+                    <EventCard event={event} />
                   </div>
-                ) : (
-                  filteredEvents.map((event) => <EventCard key={event.id} event={event} />)
-                )}
-              </div>
-            </section>
-
-            <section>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-extrabold text-foreground">Clubs</h2>
-                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-white">
-                  {filteredClubs.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredClubs.length === 0 ? (
-                  <div className="col-span-full py-10 rounded-2xl border border-dashed bg-card text-center text-sm text-muted-foreground">
-                    No clubs match your current filters.
-                  </div>
-                ) : (
-                  filteredClubs.map((club) => <ClubCard key={club.id} club={club} />)
-                )}
-              </div>
-            </section>
-
-            <section>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-extrabold text-foreground">Buildings</h2>
-                <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
-                  {filteredBuildings.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredBuildings.length === 0 ? (
-                  <div className="col-span-full py-10 rounded-2xl border border-dashed bg-card text-center text-sm text-muted-foreground">
-                    No buildings match your search.
-                  </div>
-                ) : (
-                  filteredBuildings.map((building) => (
-                    <div key={building.id} className="rounded-xl border bg-card p-4 shadow-sm">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <p className="font-bold text-foreground leading-tight">{building.name}</p>
-                        <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-bold">
-                          {building.abbreviation}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{building.address}</p>
-                      <Link href={`/?building=${building.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-                        <Building2 className="w-4 h-4" />
-                        View on map
-                      </Link>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-          </div>
+                ))
+              )}
+            </div>
+          </section>
         )}
       </div>
     </div>

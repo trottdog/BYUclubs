@@ -1,55 +1,66 @@
 import { Link } from "wouter";
 import { Club } from "@workspace/api-client-react";
-import { CalendarClock, Users } from "lucide-react";
+import { Users, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function ClubCard({
   club,
   tags = [],
-  lastEventText = "No events yet",
 }: {
   club: Club;
   tags?: string[];
-  lastEventText?: string;
 }) {
   return (
     <Link href={`/clubs/${club.id}`}>
-      <span className="group flex cursor-pointer flex-col gap-4 rounded-[1.75rem] border border-border bg-card p-5 transition-all duration-300 hover:border-primary/20 hover:shadow-hover">
-        <div className="flex items-center gap-4">
+      <motion.div 
+        whileHover={{ y: -2 }}
+        className="connect-card border-t-primary group flex flex-col gap-6 bg-white p-8"
+      >
+        <div className="flex items-start justify-between">
           <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-extrabold text-white shadow-sm"
-            style={{ backgroundColor: club.avatarColor }}
+            className="flex h-12 w-12 shrink-0 items-center justify-center text-lg font-black italic border border-primary text-white bg-primary group-hover:bg-accent group-hover:border-accent transition-colors duration-200"
           >
             {club.avatarInitials}
           </div>
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 text-base font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
-              {club.name}
-            </h3>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            className="text-primary"
+          >
+            <ArrowUpRight className="w-5 h-5" />
+          </motion.div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div>
+          <p className="connect-eyebrow mb-2">{club.categoryName.toUpperCase()}</p>
+          <h3 className="text-2xl font-black italic tracking-tighter uppercase leading-none group-hover:text-primary transition-colors text-foreground">
+            {club.name}
+          </h3>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
           {tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-border/70 bg-muted/45 px-3 py-1 text-[11px] font-semibold text-muted-foreground"
+              className="border border-border bg-muted px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-foreground transition-colors"
             >
               {tag}
             </span>
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <Users className="h-4 w-4" />
-            <span>{club.memberCount}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 truncate">
-            <CalendarClock className="h-4 w-4 shrink-0" />
-            <span className="truncate">{lastEventText}</span>
-          </span>
+        <div className="mt-auto pt-6 border-t border-border flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div className="w-6 h-6 border border-border flex items-center justify-center bg-muted">
+                <Users className="w-3 h-3 text-primary" />
+             </div>
+             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{club.memberCount} MEMBERS</span>
+          </div>
+          <div className="text-[9px] font-black uppercase tracking-[0.3em] text-primary group-hover:tracking-[0.4em] transition-all">
+            VIEW CLUB
+          </div>
         </div>
-      </span>
+      </motion.div>
     </Link>
   );
 }

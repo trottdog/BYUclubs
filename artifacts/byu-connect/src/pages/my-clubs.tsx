@@ -130,19 +130,19 @@ export default function MyClubsPage() {
   return (
     <div className="w-full min-w-0 max-w-full flex flex-col gap-6 overflow-x-hidden">
       <div className="relative">
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <SearchIcon className="absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search clubs..."
-          className="w-full rounded-xl border bg-card py-3 pl-12 pr-12 text-sm md:text-base outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          placeholder="SEARCH CLUBS..."
+          className="connect-search-input"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:bg-muted"
           >
             <X className="h-4 w-4" />
           </button>
@@ -150,26 +150,28 @@ export default function MyClubsPage() {
       </div>
 
       <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex items-center rounded-full border bg-card p-1 shadow-sm">
+        <div className="flex shrink-0 items-center border border-border bg-white p-1">
           <button
+            type="button"
             onClick={() => setTab("discover")}
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
-              tab === "discover" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground",
+              "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+              tab === "discover" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary",
             )}
           >
-            <Compass className="h-3.5 w-3.5" />
-            <span>Discover</span>
+            <Compass className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap">Discover</span>
           </button>
           <button
+            type="button"
             onClick={() => setTab("my")}
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:text-sm",
-              tab === "my" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground",
+              "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+              tab === "my" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary",
             )}
           >
-            <Users className="h-3.5 w-3.5" />
-            <span>My clubs</span>
+            <Users className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap">My clubs</span>
           </button>
         </div>
 
@@ -185,7 +187,7 @@ export default function MyClubsPage() {
             setSelectedCategoryId(Number.isFinite(id) ? id : null);
           }}
         >
-          <SelectTrigger className="h-9 w-[132px] rounded-full border bg-card px-3 text-xs font-semibold sm:w-[160px] sm:text-sm">
+          <SelectTrigger className="h-10 w-[132px] border border-border bg-white px-4 text-[10px] font-black uppercase tracking-widest text-foreground hover:border-primary sm:w-[180px]">
             <SelectValue placeholder="Topic" />
           </SelectTrigger>
           <SelectContent position="popper" className="z-50 max-h-[min(70vh,24rem)]">
@@ -207,7 +209,7 @@ export default function MyClubsPage() {
               setQuery("");
               setSelectedCategoryId(null);
             }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition hover:text-foreground sm:text-sm"
+            className="inline-flex h-10 items-center gap-1.5 border border-border bg-white px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition hover:border-primary hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
             Clear

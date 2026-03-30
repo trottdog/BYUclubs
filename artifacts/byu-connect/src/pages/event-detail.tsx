@@ -461,7 +461,9 @@ export default function EventDetailPage({
           
           {!user ? (
             <button
-              onClick={() => setLocation("/auth")}
+              onClick={() =>
+                setLocation(`/auth?return=${encodeURIComponent(pathname)}`)
+              }
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold transition-all shadow-sm bg-primary text-white hover:bg-primary/90"
             >
               Sign in to reserve
