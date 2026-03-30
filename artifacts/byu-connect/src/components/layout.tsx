@@ -75,7 +75,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Link href={item.href}>
                   <span
                     className={cn(
-                      "flex items-center justify-between px-6 py-4 transition-all duration-200 cursor-pointer text-sm font-medium",
+                      "flex items-center justify-between rounded-2xl px-6 py-4 transition-all duration-200 cursor-pointer text-sm font-medium",
                       isActive
                         ? "bg-white text-primary shadow-lg"
                         : "text-white/40 hover:text-white hover:bg-white/5"
@@ -129,8 +129,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="p-6 border-t border-white/5 bg-black/10">
           {user ? (
-            <Link href="/profile" className="flex items-center gap-4 p-4 hover:bg-white/5 cursor-pointer transition-all duration-200 group border border-transparent hover:border-white/10">
-              <div className="h-10 w-10 shrink-0 overflow-hidden border border-white/40 bg-white/10 transition-all">
+            <Link href="/profile" className="flex items-center gap-4 rounded-2xl p-4 hover:bg-white/5 cursor-pointer transition-all duration-200 group border border-transparent hover:border-white/10">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/40 bg-white/10 transition-all">
                 <img src={DEFAULT_USER_AVATAR_URL} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="overflow-hidden">
@@ -181,7 +181,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 return (
                   <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
                     <span className={cn(
-                      "flex items-center justify-between py-6 text-xl font-semibold border-b border-white/10",
+                      "flex items-center justify-between rounded-2xl py-6 text-xl font-semibold border-b border-white/10",
                       isActive ? "text-white bg-white/10 px-4 -mx-4" : "text-white/40"
                     )}>
                       {item.name}

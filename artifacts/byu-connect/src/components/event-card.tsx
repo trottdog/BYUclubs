@@ -42,12 +42,12 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
     <motion.div 
       whileHover={{ y: -2 }}
       className={cn(
-        "connect-card group relative flex flex-col border-t-primary bg-white",
+        "connect-card group relative flex flex-col overflow-hidden border-t-primary bg-white",
         compact ? "h-32 flex-row" : "h-full"
       )}
     >
       {!compact && (
-        <div className="relative h-48 w-full overflow-hidden bg-muted">
+        <div className="relative h-48 w-full overflow-hidden rounded-t-[inherit] bg-muted">
           {event.coverImageUrl && (
             <img 
               src={event.coverImageUrl}
@@ -60,7 +60,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
           <div className="absolute top-4 right-4 z-20">
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveMutation.mutate({ id: event.id }); }}
-              className="w-8 h-8 bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition-colors hover:bg-primary hover:text-white"
             >
               <Bookmark className={cn("w-4 h-4", event.isSaved && "fill-current")} />
             </button>
@@ -70,6 +70,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
              <div className="flex gap-2">
                 <span className={cn(
                   "px-2 py-1 text-[11px] font-semibold flex items-center gap-2 border bg-white/90 backdrop-blur-md",
+                  "rounded-xl",
                   isLive ? "text-accent border-accent" : "text-primary border-primary"
                 )}>
                   {isLive && <span className="w-1.5 h-1.5 bg-accent animate-pulse" />}
@@ -105,7 +106,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
                 Capacity
              </div>
              <div className="flex items-center gap-3">
-                <div className="h-1 w-20 bg-muted overflow-hidden">
+                <div className="h-1 w-20 overflow-hidden rounded-full bg-muted">
                    <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: `${capacityPercent}%` }}

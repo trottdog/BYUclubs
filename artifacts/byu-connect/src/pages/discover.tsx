@@ -255,12 +255,12 @@ export default function DiscoverPage() {
           </div>
 
           <div className="flex items-center gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex shrink-0 items-center border border-border bg-white p-1">
+            <div className="flex shrink-0 items-center rounded-2xl border border-border bg-white p-1">
               <button
                 type="button"
                 onClick={() => setView("events")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "events" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -271,7 +271,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => setView("map")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "map" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -282,7 +282,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => setView("clubs")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "clubs" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -292,10 +292,10 @@ export default function DiscoverPage() {
             </div>
 
             <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-              <SelectTrigger className="h-10 w-[160px] border border-border bg-white px-6 text-sm font-medium hover:border-primary text-foreground">
+              <SelectTrigger className="h-10 w-[160px] rounded-2xl border border-border bg-white px-6 text-sm font-medium hover:border-primary text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-primary">
+              <SelectContent className="rounded-2xl border border-primary bg-white">
                 {TIME_FILTERS.map((preset) => (
                   <SelectItem key={preset.id} value={preset.id} className="text-sm font-medium hover:bg-primary hover:text-white">
                     {preset.label}
@@ -307,7 +307,7 @@ export default function DiscoverPage() {
             <button
               onClick={() => setFoodOnly((v) => !v)}
               className={cn(
-                "h-10 px-6 border text-sm font-medium transition-all flex items-center gap-3",
+                "flex h-10 items-center gap-3 rounded-2xl border px-6 text-sm font-medium transition-all",
                 foodOnly ? "bg-primary text-white border-primary" : "border-border bg-white text-muted-foreground hover:border-primary hover:text-primary"
               )}
             >
@@ -318,7 +318,7 @@ export default function DiscoverPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={() => { setTimeFilter("all"); setSelectedCategoryId(null); setFoodOnly(false); }}
-                className="h-10 px-6 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive hover:text-white transition-all"
+                className="h-10 rounded-2xl border border-destructive/40 px-6 text-destructive text-sm font-medium hover:bg-destructive hover:text-white transition-all"
               >
                 RESET
               </button>
@@ -341,7 +341,7 @@ export default function DiscoverPage() {
             <p className="connect-eyebrow">LOADING CAMPUS DATA...</p>
           </div>
         ) : view === "map" ? (
-          <div className="h-[700px] border border-border">
+          <div className="h-[700px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <MapView events={filteredEvents} buildings={filteredBuildings} />
           </div>
         ) : view === "clubs" ? (
@@ -356,15 +356,17 @@ export default function DiscoverPage() {
               </div>
             </div>
             {filteredClubs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/10 py-40">
                 <p className="text-xl font-semibold text-muted-foreground">No clubs found</p>
                 <p className="mt-2 text-sm font-medium text-muted-foreground">Try adjusting search or filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {filteredClubs.map((club) => (
-                  <ClubCard key={club.id} club={club} />
-                ))}
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredClubs.map((club) => (
+                    <ClubCard key={club.id} club={club} />
+                  ))}
+                </div>
               </div>
             )}
           </section>
@@ -382,7 +384,7 @@ export default function DiscoverPage() {
                 SEE ALL EVENTS <ArrowUpRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-1px border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-1px overflow-hidden rounded-2xl border border-border bg-border shadow-sm md:grid-cols-2 lg:grid-cols-3">
               {filteredEvents.length === 0 ? (
                 <div className="col-span-full flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
                   <p className="text-xl font-semibold text-muted-foreground">No events found</p>
