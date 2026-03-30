@@ -9,10 +9,10 @@ export default function NotFound() {
           <AlertCircle className="h-12 w-12 text-primary" strokeWidth={2} />
         </div>
         <p className="connect-eyebrow mb-2">Error 404</p>
-        <h1 className="font-sans text-3xl font-black uppercase italic tracking-tighter text-foreground md:text-4xl">
+        <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground md:text-4xl">
           Page not found
         </h1>
-        <p className="mt-4 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <p className="mt-4 text-sm font-medium text-muted-foreground">
           That route doesn&apos;t exist or was moved.
         </p>
         <Link

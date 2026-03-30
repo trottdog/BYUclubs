@@ -98,17 +98,17 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 overflow-x-hidden pb-24 md:pb-12">
       <div className="connect-card relative flex flex-col items-center gap-6 overflow-hidden border-2 border-border p-6 md:flex-row md:items-start md:p-10">
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center border-2 border-primary bg-primary text-3xl font-black text-white md:h-32 md:w-32 md:text-4xl">
+        <div className="flex h-24 w-24 shrink-0 items-center justify-center border-2 border-primary bg-primary text-3xl font-bold text-white md:h-32 md:w-32 md:text-4xl">
           {user.firstName[0]}
           {user.lastName[0]}
         </div>
 
         <div className="flex-1 pt-2 text-center md:text-left">
           <p className="connect-eyebrow mb-1">Profile</p>
-          <h2 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+          <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             {user.firstName} {user.lastName}
           </h2>
-          <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{user.email}</p>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">{user.email}</p>
 
           <p className="mt-3 text-sm whitespace-pre-wrap break-words text-foreground/90">
             <span className="font-semibold">Bio:</span> {activeBio || "Add a short bio to tell others about yourself."}
@@ -171,17 +171,17 @@ export default function ProfilePage() {
               <div className="connect-panel flex min-w-[140px] flex-col items-center border-2 bg-white md:items-start">
                 <div className="mb-1 flex items-center gap-2 text-muted-foreground">
                   <Bookmark className="h-4 w-4 text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Saved</span>
+                  <span className="text-sm font-medium text-foreground">Saved</span>
                 </div>
-                <p className="text-3xl font-black italic text-foreground">{profile?.savedCount ?? 0}</p>
+                <p className="text-3xl font-bold text-foreground">{profile?.savedCount ?? 0}</p>
               </div>
 
               <div className="connect-panel flex min-w-[140px] flex-col items-center border-2 bg-white md:items-start">
                 <div className="mb-1 flex items-center gap-2 text-muted-foreground">
                   <CalendarCheck className="h-4 w-4 text-[#22c55e]" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Reservations</span>
+                  <span className="text-sm font-medium text-foreground">Reservations</span>
                 </div>
-                <p className="text-3xl font-black italic text-foreground">{reservationsCount}</p>
+                <p className="text-3xl font-bold text-foreground">{reservationsCount}</p>
               </div>
             </div>
           )}
@@ -190,7 +190,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-transparent px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 md:absolute md:right-6 md:top-6 md:mt-0 md:w-auto"
+          className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-transparent px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 md:absolute md:right-6 md:top-6 md:mt-0 md:w-auto"
         >
           <LogOut className="h-4 w-4" /> Sign Out
         </button>
@@ -208,7 +208,7 @@ export default function ProfilePage() {
                 <History className="h-6 w-6 shrink-0 text-[#0ea5e9]" />
                 <div>
                   <p className="connect-section-label">History</p>
-                  <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Participated events
                   </h3>
                 </div>
@@ -217,7 +217,7 @@ export default function ProfilePage() {
               {!pastEvents.length ? (
                 <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
                   <History className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                  <p className="font-bold uppercase tracking-wide text-muted-foreground">No participated events yet.</p>
+                  <p className="font-semibold text-muted-foreground">No participated events yet.</p>
                   <p className="mt-1 text-sm text-muted-foreground">Events you attended will appear here.</p>
                 </div>
               ) : (
@@ -234,7 +234,7 @@ export default function ProfilePage() {
                 <Users className="h-6 w-6 shrink-0 text-[#f97316]" />
                 <div>
                   <p className="connect-section-label">Leadership</p>
-                  <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Clubs I created
                   </h3>
                 </div>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
               {!createdClubs.length ? (
                 <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
                   <Users className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                  <p className="font-bold uppercase tracking-wide text-muted-foreground">No created clubs found.</p>
+                  <p className="font-semibold text-muted-foreground">No created clubs found.</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Clubs where you are an owner or admin will appear here.
                   </p>
@@ -268,7 +268,7 @@ export default function ProfilePage() {
                 <CalendarCheck className="h-6 w-6 shrink-0 text-[#22c55e]" />
                 <div>
                   <p className="connect-section-label">Schedule</p>
-                  <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     My reservations
                   </h3>
                 </div>
@@ -277,7 +277,7 @@ export default function ProfilePage() {
               {!reservationEvents.length ? (
                 <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
                   <CalendarCheck className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                  <p className="font-bold uppercase tracking-wide text-muted-foreground">No reservations yet.</p>
+                  <p className="font-semibold text-muted-foreground">No reservations yet.</p>
                   <p className="mt-1 text-sm text-muted-foreground">Spots you reserve will appear here.</p>
                 </div>
               ) : (
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                 <Bookmark className="h-6 w-6 shrink-0 text-primary" />
                 <div>
                   <p className="connect-section-label">Bookmarks</p>
-                  <h3 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-3xl">
+                  <h3 className="font-sans text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     Saved events
                   </h3>
                 </div>
@@ -303,7 +303,7 @@ export default function ProfilePage() {
               {!profile.savedEvents || profile.savedEvents.length === 0 ? (
                 <div className="border-2 border-dashed border-border bg-muted/20 p-10 text-center">
                   <Bookmark className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                  <p className="font-bold uppercase tracking-wide text-muted-foreground">No saved events.</p>
+                  <p className="font-semibold text-muted-foreground">No saved events.</p>
                   <p className="mt-1 text-sm text-muted-foreground">Events you bookmark will appear here.</p>
                 </div>
               ) : (

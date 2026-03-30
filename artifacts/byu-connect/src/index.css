@@ -35,12 +35,12 @@
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar: hsl(var(--sidebar));
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
 }
 
 :root {
@@ -78,7 +78,7 @@
   --sidebar-border: 211 100% 12%;
   --sidebar-ring: 211 100% 25%;
 
-  --radius: 0.75rem;
+  --radius: 0.9rem;
 }
 
 .dark {
@@ -124,11 +124,11 @@
 
 /* Editorial display utilities (BYU Connect — avoid vendor-themed class names) */
 .connect-display-title {
-  @apply font-sans text-5xl md:text-7xl font-extrabold leading-[0.92] tracking-tight;
+  @apply font-sans text-5xl md:text-7xl font-bold leading-[0.96] tracking-tight;
 }
 
 .connect-eyebrow {
-  @apply font-sans text-[11px] md:text-xs font-semibold uppercase tracking-[0.22em] text-primary;
+  @apply font-sans text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-primary;
 }
 
 .connect-card {
@@ -140,7 +140,7 @@
 }
 
 .connect-primary-btn {
-  @apply rounded-xl bg-primary text-white font-bold uppercase tracking-[0.14em] text-[11px] px-8 py-4 transition-all duration-200 flex items-center gap-3 hover:bg-secondary active:scale-95;
+  @apply rounded-xl bg-primary text-white font-semibold tracking-[0.04em] text-sm px-8 py-4 transition-all duration-200 flex items-center gap-3 hover:bg-secondary active:scale-95;
 }
 
 .connect-panel {
@@ -153,7 +153,7 @@
 }
 
 .connect-back-btn {
-  @apply inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-[11px] font-semibold text-foreground shadow-sm transition-all hover:border-primary hover:text-primary;
+  @apply inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-all hover:border-primary hover:text-primary;
 }
 
 .connect-page-title {

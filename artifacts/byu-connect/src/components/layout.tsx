@@ -54,8 +54,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                  <img src="/images/logo.png" alt="BYU" className="w-full h-full object-contain p-1" />
               </div>
               <div className="flex flex-col">
-                <span className="font-sans font-black text-2xl tracking-tighter leading-none text-white uppercase italic">BYU</span>
-                <span className="font-sans font-bold text-[9px] uppercase tracking-[0.4em] text-white/50 leading-none mt-1">Connect</span>
+                <span className="font-sans font-bold text-2xl tracking-tight leading-none text-white">BYU</span>
+                <span className="font-sans font-medium text-[10px] tracking-[0.18em] text-white/60 leading-none mt-1 uppercase">Connect</span>
               </div>
             </div>
           </Link>
@@ -74,7 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Link href={item.href}>
                   <span
                     className={cn(
-                      "flex items-center justify-between px-6 py-4 transition-all duration-200 cursor-pointer text-[10px] font-black uppercase tracking-[0.2em]",
+                      "flex items-center justify-between px-6 py-4 transition-all duration-200 cursor-pointer text-sm font-medium",
                       isActive
                         ? "bg-white text-primary shadow-lg"
                         : "text-white/40 hover:text-white hover:bg-white/5"
@@ -101,25 +101,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <p className="connect-eyebrow !text-[9px] !text-white/40">
                     LIVE CAMPUS
                   </p>
-                  <p className="mt-2 text-[10px] text-white leading-relaxed font-bold uppercase tracking-tight">
+                  <p className="mt-2 text-sm text-white leading-relaxed font-medium">
                     Events and clubs across campus at a glance.
                   </p>
                 </div>
               </div>
               <div className="mt-8 space-y-4">
                 <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-2">
+                  <p className="text-[11px] font-medium text-white/40 flex items-center gap-2">
                     <CalendarDays className="w-3 h-3" />
                     EVENTS
                   </p>
-                  <p className="text-2xl font-black text-white leading-none italic">{totalEvents}</p>
+                  <p className="text-2xl font-bold text-white leading-none">{totalEvents}</p>
                 </div>
                 <div className="flex items-end justify-between border-b border-white/5 pb-2">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-2">
+                  <p className="text-[11px] font-medium text-white/40 flex items-center gap-2">
                     <Users className="w-3 h-3" />
                     CLUBS
                   </p>
-                  <p className="text-2xl font-black text-white leading-none italic">{totalClubs}</p>
+                  <p className="text-2xl font-bold text-white leading-none">{totalClubs}</p>
                 </div>
               </div>
             </div>
@@ -133,10 +133,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {user.firstName[0]}{user.lastName[0]}
               </div>
               <div className="overflow-hidden">
-                <div className="text-[10px] font-black text-white uppercase tracking-widest truncate">
+                <div className="text-sm font-semibold text-white truncate">
                   {user.firstName} {user.lastName}
                 </div>
-                <div className="text-[9px] text-white/30 truncate font-bold uppercase tracking-tighter mt-0.5">
+                <div className="text-[11px] text-white/45 truncate font-medium mt-0.5">
                   {user.email}
                 </div>
               </div>
@@ -157,7 +157,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="w-7 h-7 bg-white flex items-center justify-center">
             <img src="/images/logo.png" alt="BYU" className="w-full h-full object-contain p-0.5" />
           </div>
-          <span className="font-sans font-black text-xl tracking-tighter italic">BYU</span>
+          <span className="font-sans font-bold text-xl tracking-tight">BYU</span>
         </Link>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -180,7 +180,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 return (
                   <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
                     <span className={cn(
-                      "flex items-center justify-between py-6 text-xl font-black italic uppercase tracking-tighter border-b border-white/10",
+                      "flex items-center justify-between py-6 text-xl font-semibold border-b border-white/10",
                       isActive ? "text-white bg-white/10 px-4 -mx-4" : "text-white/40"
                     )}>
                       {item.name}

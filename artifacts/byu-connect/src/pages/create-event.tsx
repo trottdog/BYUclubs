@@ -144,10 +144,10 @@ export default function CreateEventPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-x-hidden pb-24 md:pb-12">
       <div className="border-b-4 border-primary pb-6">
         <p className="connect-eyebrow mb-2">New event</p>
-        <h1 className="font-sans text-3xl font-black uppercase italic tracking-tighter text-foreground md:text-4xl">
+        <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground md:text-4xl">
           Create event
         </h1>
-        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+        <p className="mt-3 text-sm font-medium text-muted-foreground">
           Host a campus event for your club or group.
         </p>
       </div>

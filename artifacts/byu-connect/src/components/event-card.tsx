@@ -69,7 +69,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
           <div className="absolute bottom-4 left-4 z-20">
              <div className="flex gap-2">
                 <span className={cn(
-                  "px-2 py-1 text-[9px] font-black tracking-widest flex items-center gap-2 border bg-white/90 backdrop-blur-md",
+                  "px-2 py-1 text-[11px] font-semibold flex items-center gap-2 border bg-white/90 backdrop-blur-md",
                   isLive ? "text-accent border-accent" : "text-primary border-primary"
                 )}>
                   {isLive && <span className="w-1.5 h-1.5 bg-accent animate-pulse" />}
@@ -83,16 +83,16 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
       <div className="p-6 flex flex-col flex-1">
         <div className="flex-1">
           <p className="connect-eyebrow mb-2">{event.clubName.toUpperCase()}</p>
-          <h3 className="text-xl font-black italic tracking-tighter mb-4 leading-tight group-hover:text-primary transition-colors text-foreground">
-            {event.title.toUpperCase()}
+          <h3 className="text-xl font-bold mb-4 leading-tight group-hover:text-primary transition-colors text-foreground">
+            {event.title}
           </h3>
           
           <div className="space-y-2 mb-6">
-            <div className="flex items-center text-[10px] font-bold text-muted-foreground gap-3 uppercase tracking-wider">
+            <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
               <MapPin className="w-3.5 h-3.5 text-primary" />
               <span>{event.buildingName} / {event.roomNumber}</span>
             </div>
-            <div className="flex items-center text-[10px] font-bold text-muted-foreground gap-3 uppercase tracking-wider">
+            <div className="flex items-center text-xs font-medium text-muted-foreground gap-3">
               <Clock className="w-3.5 h-3.5" />
               <span>{format(start, "HH:mm")} - {format(end, "HH:mm")}</span>
             </div>
@@ -101,7 +101,7 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
 
         <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
           <div className="flex flex-col gap-1.5">
-             <div className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+             <div className="text-[11px] font-medium text-muted-foreground">
                 Capacity
              </div>
              <div className="flex items-center gap-3">
@@ -112,12 +112,12 @@ export function EventCard({ event, compact = false }: { event: Event; compact?: 
                      className="h-full bg-primary" 
                    />
                 </div>
-                <span className="text-[9px] font-black text-primary">{capacityPercent}%</span>
+                <span className="text-xs font-semibold text-primary">{capacityPercent}%</span>
              </div>
           </div>
           
-          <Link href={`/events/${event.id}`} className="text-[9px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-             VIEW <ArrowUpRight className="w-3 h-3" />
+          <Link href={`/events/${event.id}`} className="text-xs font-semibold text-primary flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+             View <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
 

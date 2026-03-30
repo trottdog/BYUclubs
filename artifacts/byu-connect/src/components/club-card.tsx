@@ -18,7 +18,7 @@ export function ClubCard({
       >
         <div className="flex items-start justify-between">
           <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center text-lg font-black italic border border-primary text-white bg-primary group-hover:bg-accent group-hover:border-accent transition-colors duration-200"
+            className="flex h-12 w-12 shrink-0 items-center justify-center text-lg font-bold border border-primary text-white bg-primary group-hover:bg-accent group-hover:border-accent transition-colors duration-200"
           >
             {club.avatarInitials}
           </div>
@@ -33,7 +33,7 @@ export function ClubCard({
 
         <div>
           <p className="connect-eyebrow mb-2">{club.categoryName.toUpperCase()}</p>
-          <h3 className="text-2xl font-black italic tracking-tighter uppercase leading-none group-hover:text-primary transition-colors text-foreground">
+          <h3 className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors text-foreground">
             {club.name}
           </h3>
         </div>
@@ -42,7 +42,7 @@ export function ClubCard({
           {tags.map((tag) => (
             <span
               key={tag}
-              className="border border-border bg-muted px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-foreground transition-colors"
+              className="border border-border bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors"
             >
               {tag}
             </span>
@@ -54,10 +54,10 @@ export function ClubCard({
              <div className="w-6 h-6 border border-border flex items-center justify-center bg-muted">
                 <Users className="w-3 h-3 text-primary" />
              </div>
-             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{club.memberCount} MEMBERS</span>
+             <span className="text-xs font-medium text-muted-foreground">{club.memberCount} members</span>
           </div>
-          <div className="text-[9px] font-black uppercase tracking-[0.3em] text-primary group-hover:tracking-[0.4em] transition-all">
-            VIEW CLUB
+          <div className="text-xs font-semibold text-primary transition-all">
+            View club
           </div>
         </div>
       </motion.div>

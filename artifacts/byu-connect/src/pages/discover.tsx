@@ -165,21 +165,21 @@ export default function DiscoverPage() {
            <ShieldCheck className="w-5 h-5 fill-current" />
            <p className="connect-eyebrow">BYU CONNECT</p>
         </div>
-        <h1 className="connect-display-title italic text-foreground">
+        <h1 className="connect-display-title text-foreground">
            DISCOVER <span className="text-primary">CAMPUS</span> LIFE
         </h1>
         <div className="flex flex-col md:flex-row gap-12 items-start md:items-end">
-           <p className="max-w-xl text-muted-foreground font-bold uppercase tracking-tight leading-none text-sm border-l-2 border-primary pl-6">
+           <p className="max-w-xl text-muted-foreground font-medium leading-relaxed text-sm border-l-2 border-primary pl-6">
               Find events, clubs, and places on campus. Student organizations keep the community connected—browse what&apos;s happening and where.
            </p>
            <div className="flex gap-8">
               <div className="flex flex-col">
-                 <span className="text-2xl font-black italic text-primary leading-none tracking-tighter">LIVE</span>
-                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">STATUS</span>
+                 <span className="text-2xl font-bold text-primary leading-none tracking-tight">Live</span>
+                 <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground mt-1">Status</span>
               </div>
               <div className="flex flex-col">
-                 <span className="text-2xl font-black italic text-foreground leading-none tracking-tighter">{events?.length ?? 0}</span>
-                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">EVENTS</span>
+                 <span className="text-2xl font-bold text-foreground leading-none tracking-tight">{events?.length ?? 0}</span>
+                 <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground mt-1">Events</span>
               </div>
            </div>
         </div>
@@ -209,7 +209,7 @@ export default function DiscoverPage() {
                   className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto border-2 border-primary bg-white p-2 shadow-xl"
                 >
                   {suggestions.length === 0 ? (
-                    <div className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">NO MATCHES FOUND.</div>
+                    <div className="px-6 py-4 text-sm font-medium text-muted-foreground">No matches found.</div>
                   ) : (
                     suggestions.map((suggestion) => (
                       <button
@@ -223,10 +223,10 @@ export default function DiscoverPage() {
                         className="flex w-full items-start justify-between gap-6 px-6 py-4 text-left hover:bg-primary group transition-colors"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-[10px] font-black text-foreground uppercase tracking-wider group-hover:text-white">{suggestion.label}</p>
-                          <p className="truncate text-[8px] font-bold text-muted-foreground mt-0.5 group-hover:text-white/60 tracking-widest">{suggestion.subtitle}</p>
+                          <p className="truncate text-sm font-semibold text-foreground group-hover:text-white">{suggestion.label}</p>
+                          <p className="truncate text-[11px] font-medium text-muted-foreground mt-0.5 group-hover:text-white/60">{suggestion.subtitle}</p>
                         </div>
-                        <span className="shrink-0 bg-muted px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-foreground group-hover:bg-white/20 group-hover:text-white">
+                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground group-hover:bg-white/20 group-hover:text-white">
                           {suggestion.type}
                         </span>
                       </button>
@@ -243,7 +243,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => setView("events")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "events" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -254,7 +254,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => setView("map")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "map" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -265,7 +265,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => setView("clubs")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all sm:px-6",
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all sm:px-6",
                   view === "clubs" ? "bg-primary text-white" : "text-muted-foreground hover:text-primary"
                 )}
               >
@@ -275,12 +275,12 @@ export default function DiscoverPage() {
             </div>
 
             <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-              <SelectTrigger className="h-10 w-[160px] border border-border bg-white px-6 text-[10px] font-black uppercase tracking-widest hover:border-primary text-foreground">
+              <SelectTrigger className="h-10 w-[160px] border border-border bg-white px-6 text-sm font-medium hover:border-primary text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border border-primary">
                 {TIME_FILTERS.map((preset) => (
-                  <SelectItem key={preset.id} value={preset.id} className="text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white">
+                  <SelectItem key={preset.id} value={preset.id} className="text-sm font-medium hover:bg-primary hover:text-white">
                     {preset.label}
                   </SelectItem>
                 ))}
@@ -290,7 +290,7 @@ export default function DiscoverPage() {
             <button
               onClick={() => setFoodOnly((v) => !v)}
               className={cn(
-                "h-10 px-6 border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3",
+                "h-10 px-6 border text-sm font-medium transition-all flex items-center gap-3",
                 foodOnly ? "bg-primary text-white border-primary" : "border-border bg-white text-muted-foreground hover:border-primary hover:text-primary"
               )}
             >
@@ -301,7 +301,7 @@ export default function DiscoverPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={() => { setTimeFilter("all"); setSelectedCategoryId(null); setFoodOnly(false); }}
-                className="h-10 px-6 border border-destructive/40 text-destructive text-[10px] font-black uppercase tracking-widest hover:bg-destructive hover:text-white transition-all"
+                className="h-10 px-6 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive hover:text-white transition-all"
               >
                 RESET
               </button>
@@ -332,16 +332,16 @@ export default function DiscoverPage() {
             <div className="mb-12 flex items-center justify-between border-b-2 border-border pb-6">
               <div className="flex flex-col gap-2">
                 <p className="connect-eyebrow">COMMUNITY</p>
-                <h2 className="text-5xl font-black italic tracking-tighter text-foreground">ACTIVE CLUBS</h2>
+                <h2 className="text-5xl font-bold tracking-tight text-foreground">Active Clubs</h2>
               </div>
-              <div className="bg-muted border border-border px-6 py-3 text-[10px] font-black tracking-widest text-muted-foreground italic">
+              <div className="bg-muted border border-border px-6 py-3 text-sm font-medium text-muted-foreground">
                 {filteredClubs.length} CLUBS
               </div>
             </div>
             {filteredClubs.length === 0 ? (
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
-                <p className="text-xl font-black italic uppercase tracking-widest text-muted-foreground">NO CLUBS FOUND</p>
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Try adjusting search or filters</p>
+                <p className="text-xl font-semibold text-muted-foreground">No clubs found</p>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">Try adjusting search or filters</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -356,11 +356,11 @@ export default function DiscoverPage() {
             <div className="mb-12 flex items-end justify-between border-b-4 border-primary pb-6">
               <div className="flex flex-col gap-2">
                 <p className="connect-eyebrow">FEATURED</p>
-                <h2 className="text-5xl font-black italic tracking-tighter text-foreground">LIVE EVENTS</h2>
+                <h2 className="text-5xl font-bold tracking-tight text-foreground">Live Events</h2>
               </div>
               <Link
                 href="/events"
-                className="hidden items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-primary transition-colors hover:text-accent md:flex"
+                className="hidden items-center gap-3 text-sm font-medium text-primary transition-colors hover:text-accent md:flex"
               >
                 SEE ALL EVENTS <ArrowUpRight className="h-4 w-4" />
               </Link>
@@ -368,7 +368,7 @@ export default function DiscoverPage() {
             <div className="grid grid-cols-1 gap-1px border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
               {filteredEvents.length === 0 ? (
                 <div className="col-span-full flex flex-col items-center justify-center border-2 border-dashed border-border bg-muted/10 py-40">
-                  <p className="text-xl font-black italic uppercase tracking-widest text-muted-foreground">NO EVENTS FOUND</p>
+                  <p className="text-xl font-semibold text-muted-foreground">No events found</p>
                 </div>
               ) : (
                 filteredEvents.map((event) => (

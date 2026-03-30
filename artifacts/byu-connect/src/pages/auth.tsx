@@ -109,12 +109,12 @@ export default function AuthPage() {
               <img src="/images/logo.png" alt="" className="h-full w-full object-contain" />
             </div>
             <p className="connect-eyebrow !text-white/60">BYU Connect</p>
-            <h1 className="mt-4 font-sans text-4xl font-black uppercase italic leading-[1.1] tracking-tighter md:text-5xl">
+            <h1 className="mt-4 font-sans text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl">
               Your campus,
               <br />
               connected.
             </h1>
-            <p className="mt-6 max-w-md text-sm font-bold uppercase tracking-wide text-white/75">
+            <p className="mt-6 max-w-md text-sm font-medium leading-relaxed text-white/75">
               Discover events, join clubs, and make the most of your BYU experience in one place.
             </p>
           </div>
@@ -128,16 +128,16 @@ export default function AuthPage() {
                 <img src="/images/logo.png" alt="" className="h-full w-full object-contain" />
               </div>
               <p className="connect-eyebrow">Sign in</p>
-              <h1 className="mt-2 font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground">
+              <h1 className="mt-2 font-sans text-2xl font-bold tracking-tight text-foreground">
                 BYU Connect
               </h1>
             </div>
 
             <div className="connect-card border-2 border-border p-8 sm:p-10">
-              <h2 className="font-sans text-2xl font-black uppercase italic tracking-tighter text-foreground">
+              <h2 className="font-sans text-2xl font-bold tracking-tight text-foreground">
                 {isLogin ? "Welcome back" : "Create an account"}
               </h2>
-              <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <p className="mt-2 text-sm font-medium text-muted-foreground">
                 {isLogin
                   ? "Enter your credentials to access your account."
                   : "Use your @byu.edu email to get started."}

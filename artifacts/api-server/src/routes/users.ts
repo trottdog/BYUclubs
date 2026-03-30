@@ -7,6 +7,31 @@ import { getAuthUserId } from "../lib/auth-cookie.js";
 
 const router = Router();
 
+const publicUserColumns = {
+  id: usersTable.id,
+  email: usersTable.email,
+  firstName: usersTable.firstName,
+  lastName: usersTable.lastName,
+  createdAt: usersTable.createdAt,
+};
+
+function toUserResponse(user: {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  createdAt: Date;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    bio: null,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
+
 router.patch("/users/profile", async (req, res): Promise<void> => {
   const userId = getAuthUserId(req);
   if (!userId) {
@@ -20,29 +45,28 @@ router.patch("/users/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  const normalizedBio = parsed.data.bio.trim();
+  try {
+    const normalizedBio = parsed.data.bio.trim();
 
-  const [updated] = await db
-    .update(usersTable)
-    .set({ bio: normalizedBio.length > 0 ? normalizedBio : null })
-    .where(eq(usersTable.id, userId))
-    .returning();
+    const [updated] = await db
+      .update(usersTable)
+      .set({ bio: normalizedBio.length > 0 ? normalizedBio : null })
+      .where(eq(usersTable.id, userId))
+      .returning(publicUserColumns);
 
-  if (!updated) {
-    res.status(401).json({ error: "User not found." });
-    return;
+    if (!updated) {
+      res.status(401).json({ error: "User not found." });
+      return;
+    }
+
+    res.json(GetMeResponse.parse(toUserResponse(updated)));
+  } catch (err: any) {
+    if (err?.code === "42703") {
+      res.status(409).json({ error: "Profile bio is unavailable until the database schema is updated." });
+      return;
+    }
+    throw err;
   }
-
-  res.json(
-    GetMeResponse.parse({
-      id: updated.id,
-      email: updated.email,
-      firstName: updated.firstName,
-      lastName: updated.lastName,
-      bio: updated.bio ?? null,
-      createdAt: updated.createdAt.toISOString(),
-    }),
-  );
 });
 
 router.get("/users/profile", async (req, res): Promise<void> => {
@@ -52,7 +76,10 @@ router.get("/users/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const [user] = await db
+    .select(publicUserColumns)
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
   if (!user) {
     res.status(401).json({ error: "User not found." });
     return;
@@ -161,15 +188,8 @@ router.get("/users/profile", async (req, res): Promise<void> => {
     }
   }
 
-  const profile = {
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      bio: user.bio ?? null,
-      createdAt: user.createdAt.toISOString(),
-    },
+    const profile = {
+    user: toUserResponse(user),
     savedEvents,
     reservations: reservationEvents,
     pastParticipatedEvents,
